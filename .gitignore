@@ -1,0 +1,60 @@
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# AI coding artifacts
+.ai_coding/
+
+# Supabase local development
+.supabase/
+
+# Project-specific ignores
+# Backend (Python/FastAPI)
+evermynd_backend/__pycache__/
+evermynd_backend/*.py[cod]
+evermynd_backend/.pytest_cache/
+evermynd_backend/.coverage
+evermynd_backend/venv/
+evermynd_backend/.venv/
+evermynd_backend/uploads/
+
+# Frontend (likely Node.js/React)
+evermynd_frontend/node_modules/
+evermynd_frontend/.next/
+evermynd_frontend/dist/
+evermynd_frontend/build/
+
+# Landing Page (likely Node.js/static)
+evermynd_landing_page/node_modules/
+evermynd_landing_page/.next/
+evermynd_landing_page/dist/
+evermynd_landing_page/build/
