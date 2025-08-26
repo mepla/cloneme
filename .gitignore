@@ -31,9 +31,6 @@ pids/
 *.seed
 *.pid.lock
 
-# AI coding artifacts
-.ai_coding/
-
 # Supabase local development
 .supabase/
 
