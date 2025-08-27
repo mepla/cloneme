@@ -77,3 +77,15 @@ The frontend web app will include both the end user functionalities and creator 
 * Tailwind CSS
 * Use shadcn MCP to plan, design and implement this
 * Light and dark mode, with ability to switch
+* The landing page consists of the following sections:
+  * Hero: An eye catching title that says: "Be the perfect coach for everyone."
+    * An elegantly animated sub-section that mentions 3 problems: "Coaching doesn't scale", "Courses don't engage", "Content is not personal". And show how Evermynd solves that problem for creator and let them do personalised coaching at scale.
+    * Another sub section that visually shows the 3 steps of becoming a coach on Evermynd: 1. Ingest your own knowledge base (showing youtube, instagram, etc visually) 2. Configure your AI coach to best match your audience. 3. Start selling your AI coach as a subscription to your audience.
+  * A call to action section that says: "Get early access" with a pop-up form that asks for: 
+    * Name 
+    * email 
+    * website or socials 
+    * a question that says: "Do you currently generate revenue from coaching or educating?"
+      * Answers are a dropdown of: No, $10,000-50,000 /y, $50,000-200,000 /y, $200,000+ /y
+  * A section with the title "For you, the creator", explaining the value of the platform for creators and an elegantly animated component that shows how they would confire their AI Coach.
+  * A section with the title "For your users", explaining all the value for their users such as 24/7 access and all the personalization and multi modality and learning at their own pace, etc.
