@@ -11,10 +11,10 @@
         </p>
       </div>
 
-      <div class="grid lg:grid-cols-2 gap-16 items-start">
+      <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start justify-items-center lg:justify-items-start">
         <!-- Chat Interface Demo -->
-        <div class="chat-demo">
-          <div class="demo-container glass-card rounded-3xl p-6 shadow-2xl">
+        <div class="chat-demo w-full max-w-lg lg:max-w-none mx-auto lg:mx-0">
+          <div class="demo-container glass-card rounded-3xl p-4 lg:p-6 shadow-2xl w-full overflow-hidden">
             <div class="demo-header flex items-center justify-between mb-6">
               <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
@@ -43,7 +43,7 @@
                 :style="{ animationDelay: `${index * 800}ms` }"
               >
                 <div
-                  class="message-bubble max-w-xs p-3 rounded-2xl"
+                  class="message-bubble max-w-[280px] sm:max-w-xs p-3 rounded-2xl"
                   :class="message.sender === 'user' 
                     ? 'bg-primary-500 text-white ml-auto' 
                     : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'"
@@ -118,11 +118,11 @@
             </div>
 
             <!-- Chat Input -->
-            <div class="chat-input flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <div class="chat-input flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl w-full">
               <input
                 type="text"
                 placeholder="Ask your coach anything..."
-                class="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
+                class="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none text-sm"
                 readonly
               />
               <button class="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors">
@@ -139,8 +139,8 @@
         </div>
 
         <!-- Content Feed Demo -->
-        <div class="feed-demo">
-          <div class="demo-container glass-card rounded-3xl p-6 shadow-2xl">
+        <div class="feed-demo w-full max-w-lg lg:max-w-none mx-auto lg:mx-0">
+          <div class="demo-container glass-card rounded-3xl p-4 lg:p-6 shadow-2xl w-full overflow-hidden">
             <div class="demo-header mb-6">
               <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 Personalized Content Feed
