@@ -8,13 +8,12 @@
             <EvermyndLogo size="sm" gradient="bg-gradient-to-r from-blue-600 to-purple-600" />
           </div>
           <div class="flex items-center space-x-4">
-            <a
-              data-formkit-toggle="1fe98e99bc"
-              href="https://yef.kit.com/1fe98e99bc"
-              class="btn-primary text-sm px-4 py-2 transform transition-all duration-300 hover:scale-105 inline-block text-center no-underline"
+            <button
+              @click="handleGetEarlyAccess"
+              class="btn-primary text-sm px-4 py-2 transform transition-all duration-300 hover:scale-105"
             >
               Get Early Access
-            </a>
+            </button>
             <ThemeSwitcher />
           </div>
         </div>
@@ -61,6 +60,7 @@
                 v-if="showProblems"
                 :text="problem.description"
                 :delay="index * 200 + 500"
+                :duration="30"
                 class="text-gray-700 dark:text-gray-300 text-sm"
               />
             </div>
@@ -198,14 +198,13 @@
             'translate-y-4 opacity-0': !showCTA
           }"
         >
-          <a
-            data-formkit-toggle="1fe98e99bc"
-            href="https://yef.kit.com/1fe98e99bc"
-            class="btn-primary text-xl px-12 py-4 transform transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-block text-center no-underline"
+          <button
+            @click="handleGetEarlyAccess"
+            class="btn-primary text-xl px-12 py-4 transform transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center"
           >
             Get Early Access
-            <ArrowRight class="ml-2 h-5 w-5 inline" />
-          </a>
+            <ArrowRight class="ml-2 h-5 w-5" />
+          </button>
         </div>
       </div>
     </div>
@@ -213,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import AuroraBackground from '@/components/ui/AuroraBackground.vue'
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher.vue'
 import TypingText from '@/components/ui/TypingText.vue'
@@ -245,6 +244,18 @@ const showSteps = ref(false)
 const showCTA = ref(false)
 const stepsContainer = ref<HTMLElement>()
 const stepRefs = ref<HTMLElement[]>([])
+
+// Inject the Kit modal function from parent
+const showKitModal = inject<() => Promise<boolean>>('showKitModal')
+
+const handleGetEarlyAccess = async () => {
+  if (showKitModal) {
+    const success = await showKitModal()
+    if (!success) {
+      console.warn('Failed to show Kit modal')
+    }
+  }
+}
 
 const problems = [
   {
