@@ -25,6 +25,9 @@ Thumbs.db
 *.log
 logs/
 
+# Playwright MCP screenshots
+.playwright-mcp/
+
 # Runtime data
 pids/
 *.pid

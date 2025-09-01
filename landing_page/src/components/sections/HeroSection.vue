@@ -2,20 +2,25 @@
   <AuroraBackground>
     <div class="container mx-auto px-6 py-20 text-center">
       <!-- Navigation -->
-      <nav class="absolute top-6 left-6 right-6 z-20">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
-              <span class="text-white font-bold text-sm">E</span>
-            </div>
-            <span class="text-xl font-bold text-hero-primary">EverMynd</span>
+      <nav class="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-5xl px-6">
+        <div class="flex items-center justify-between px-6 py-4 rounded-2xl backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-1">
+          <div class="flex items-center">
+            <EvermyndLogo size="sm" gradient="bg-gradient-to-r from-blue-600 to-purple-600" />
           </div>
-          <ThemeSwitcher />
+          <div class="flex items-center space-x-4">
+            <button
+              class="btn-primary text-sm px-4 py-2 transform transition-all duration-300 hover:scale-105"
+              @click="$emit('openEarlyAccess')"
+            >
+              Get Early Access
+            </button>
+            <ThemeSwitcher />
+          </div>
         </div>
       </nav>
 
       <!-- Hero Content -->
-      <div class="max-w-4xl mx-auto space-y-8">
+      <div class="max-w-4xl mx-auto space-y-8 mt-24">
         <!-- Main Title -->
         <div class="space-y-6">
           <h1 class="text-5xl md:text-7xl font-bold text-hero-primary leading-tight">
@@ -81,11 +86,11 @@
               'translate-y-8 opacity-0 scale-95': !showSolution
             }"
           >
-            <div class="text-green-500 dark:text-green-400 mb-6">
-              <Zap class="h-16 w-16 mx-auto" />
+            <div class="mb-6 flex justify-center">
+              <EvermyndLogo size="lg" gradient="bg-gradient-to-r from-blue-600 to-purple-600" />
             </div>
             <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              EverMynd solves all of this
+              Scale your coaching to thousands 🚀
             </h3>
             <p class="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
               Turn your expertise into AI-powered coaching that scales infinitely while maintaining your personal touch
@@ -173,7 +178,7 @@
                         </div>
                       </div>
                       <div v-else class="revenue-demo text-center">
-                        <div class="text-2xl font-bold text-green-400">$10K+</div>
+                        <div class="text-2xl font-bold text-gray-300 dark:text-gray-400">+42%</div>
                         <div class="text-xs text-gray-400">Monthly Revenue</div>
                       </div>
                     </div>
@@ -211,11 +216,11 @@ import AuroraBackground from '@/components/ui/AuroraBackground.vue'
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher.vue'
 import TypingText from '@/components/ui/TypingText.vue'
 import AnimatedBeam from '@/components/ui/AnimatedBeam.vue'
+import EvermyndLogo from '@/components/ui/EvermyndLogo.vue'
 import { 
   ArrowDown, 
   ArrowRight, 
-  Zap, 
-  Scale, 
+  Shrink, 
   Users, 
   Target,
   Database,
@@ -226,7 +231,9 @@ import {
   FileText,
   BookOpen,
   GraduationCap,
-  File
+  File,
+  BookHeart,
+  BrainCircuit
 } from 'lucide-vue-next'
 
 interface Emits {
@@ -244,12 +251,12 @@ const stepRefs = ref<HTMLElement[]>([])
 
 const problems = [
   {
-    icon: Scale,
+    icon: Shrink,
     title: "Coaching doesn't scale",
     description: "You can only help so many people one-on-one"
   },
   {
-    icon: Users,
+    icon: BookHeart,
     title: "Courses don't engage",
     description: "Rigid courses don't keep users engaged"
   },
@@ -262,7 +269,7 @@ const problems = [
 
 const steps = [
   {
-    icon: Database,
+    icon: BrainCircuit,
     title: "Build your AI coach",
     description: "Train your AI coach with one click, using your knowledge and existing content",
     price: 0
