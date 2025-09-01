@@ -8,12 +8,13 @@
             <EvermyndLogo size="sm" gradient="bg-gradient-to-r from-blue-600 to-purple-600" />
           </div>
           <div class="flex items-center space-x-4">
-            <button
-              class="btn-primary text-sm px-4 py-2 transform transition-all duration-300 hover:scale-105"
-              @click="$emit('openEarlyAccess')"
+            <a
+              data-formkit-toggle="1fe98e99bc"
+              href="https://yef.kit.com/1fe98e99bc"
+              class="btn-primary text-sm px-4 py-2 transform transition-all duration-300 hover:scale-105 inline-block text-center no-underline"
             >
               Get Early Access
-            </button>
+            </a>
             <ThemeSwitcher />
           </div>
         </div>
@@ -197,13 +198,14 @@
             'translate-y-4 opacity-0': !showCTA
           }"
         >
-          <button
-            class="btn-primary text-xl px-12 py-4 transform transition-all duration-300 hover:scale-110 hover:shadow-2xl"
-            @click="$emit('openEarlyAccess')"
+          <a
+            data-formkit-toggle="1fe98e99bc"
+            href="https://yef.kit.com/1fe98e99bc"
+            class="btn-primary text-xl px-12 py-4 transform transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-block text-center no-underline"
           >
             Get Early Access
             <ArrowRight class="ml-2 h-5 w-5 inline" />
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -236,11 +238,6 @@ import {
   BrainCircuit
 } from 'lucide-vue-next'
 
-interface Emits {
-  (e: 'openEarlyAccess'): void
-}
-
-defineEmits<Emits>()
 
 const showProblems = ref(false)
 const showSolution = ref(false)

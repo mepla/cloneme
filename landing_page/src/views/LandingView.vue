@@ -1,31 +1,23 @@
 <template>
   <div class="landing-page">
-    <HeroSection @open-early-access="openEarlyAccessModal" />
+    <HeroSection />
     <ForCreatorsSection />
     <ForUsersSection />
-    
-    <!-- Early Access Modal -->
-    <AnimatedModal v-model="showEarlyAccessModal">
-      <EarlyAccessForm @close="closeEarlyAccessModal" />
-    </AnimatedModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 import HeroSection from '@/components/sections/HeroSection.vue'
 import ForCreatorsSection from '@/components/sections/ForCreatorsSection.vue'
 import ForUsersSection from '@/components/sections/ForUsersSection.vue'
-import AnimatedModal from '@/components/ui/AnimatedModal.vue'
-import EarlyAccessForm from '@/components/forms/EarlyAccessForm.vue'
 
-const showEarlyAccessModal = ref(false)
-
-const openEarlyAccessModal = () => {
-  showEarlyAccessModal.value = true
-}
-
-const closeEarlyAccessModal = () => {
-  showEarlyAccessModal.value = false
-}
+onMounted(() => {
+  // Load Kit.com script
+  const script = document.createElement('script')
+  script.async = true
+  script.setAttribute('data-uid', '1fe98e99bc')
+  script.src = 'https://yef.kit.com/1fe98e99bc/index.js'
+  document.head.appendChild(script)
+})
 </script>
