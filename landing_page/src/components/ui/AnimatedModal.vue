@@ -23,20 +23,10 @@
         >
           <div
             v-if="isOpen"
-            class="modal-content relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+            class="modal-content relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl dark:bg-gray-900"
             @click.stop
           >
-            <button
-              class="absolute top-4 right-4 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
-              @click="closeModal"
-              aria-label="Close modal"
-            >
-              <X class="h-5 w-5" />
-            </button>
-            
-            <div class="pr-10">
-              <slot />
-            </div>
+            <slot />
           </div>
         </Transition>
       </div>

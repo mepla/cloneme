@@ -1,11 +1,18 @@
 <template>
   <div class="early-access-form">
-    <div class="form-header text-center mb-8">
+    <div class="form-header text-center mb-8 relative">
+      <button
+        @click="$emit('close')"
+        class="absolute top-0 right-0 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+        aria-label="Close"
+      >
+        <X class="h-5 w-5" />
+      </button>
       <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
         Get Early Access
       </h2>
       <p class="text-gray-600 dark:text-gray-300">
-        Join the waitlist and be the first to monetize your expertise with AI coaching
+        Be the first to monetize your expertise with AI coaching
       </p>
     </div>
 
@@ -54,7 +61,7 @@
           v-model="form.website"
           type="url"
           class="form-input w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200"
-          placeholder="https://your-website.com or social media profile"
+          placeholder="Social media link or website.com"
         />
       </div>
 
@@ -114,21 +121,12 @@
       </div>
     </form>
 
-    <!-- Close Button for Mobile -->
-    <div class="mt-6 sm:hidden">
-      <button
-        @click="$emit('close')"
-        class="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-      >
-        Cancel
-      </button>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { Check } from 'lucide-vue-next'
+import { Check, X } from 'lucide-vue-next'
 
 interface FormData {
   name: string
@@ -239,11 +237,11 @@ const handleSubmit = async () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #9966ff 0%, #8C52FF 100%);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #8C52FF 0%, #7A3FE6 100%);
   transform: translateY(-1px);
 }
 

@@ -52,7 +52,7 @@
               }"
               :style="{ animationDelay: `${index * 200}ms` }"
             >
-              <div class="text-primary-500 dark:text-primary-400 mb-4">
+              <div class="text-gray-400 dark:text-gray-500 mb-4">
                 <component :is="problem.icon" class="h-12 w-12 mx-auto" />
               </div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{{ problem.title }}</h3>
@@ -74,7 +74,7 @@
                 'translate-y-4 opacity-0': !showSolution
               }"
             >
-              <ArrowDown class="h-8 w-8 text-primary-400 animate-bounce" />
+              <ArrowDown class="h-8 w-8 text-gray-400 dark:text-gray-500 animate-bounce" />
             </div>
           </div>
 
@@ -148,7 +148,7 @@
                     <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full bg-gradient-to-r from-primary-500 to-purple-500 flex items-center justify-center text-white text-lg font-bold z-10">
                       {{ index + 1 }}
                     </div>
-                    <div class="text-primary-500 dark:text-primary-400 mb-4">
+                    <div class="text-gray-400 dark:text-gray-500 mb-4">
                       <component :is="step.icon" class="h-12 w-12 mx-auto" />
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">{{ step.title }}</h3>
@@ -178,7 +178,7 @@
                         </div>
                       </div>
                       <div v-else class="revenue-demo text-center">
-                        <div class="text-2xl font-bold text-gray-300 dark:text-gray-400">+42%</div>
+                        <div class="text-2xl font-bold text-primary-400 dark:text-primary-400">+42%</div>
                         <div class="text-xs text-gray-400">Monthly Revenue</div>
                       </div>
                     </div>
@@ -270,13 +270,13 @@ const problems = [
 const steps = [
   {
     icon: BrainCircuit,
-    title: "Build your AI coach",
+    title: "Build your AI Coach",
     description: "Train your AI coach with one click, using your knowledge and existing content",
     price: 0
   },
   {
     icon: Settings,
-    title: "Configure AI Coach",
+    title: "Configure your Coach",
     description: "Set personality, pricing, and features to match your style",
     price: 49
   },
