@@ -35,9 +35,9 @@
         <div class="problem-solution-container space-y-12 my-16">
           <!-- Problems Title -->
           <div class="problems-title text-center mb-8">
-            <h2 class="text-2xl md:text-3xl font-semibold text-hero-primary">
-              Most coaches and educators agree that:
-            </h2>
+            <h4 class="text-2xl md:text-3xl font-semibold text-hero-primary">
+              If you are a coach or educator you know:
+            </h4>
           </div>
           
           <!-- Problems -->
