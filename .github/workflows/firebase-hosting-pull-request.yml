@@ -14,8 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm run build
+        working-directory: ./landing_page
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EVERMYND_987CB }}
           projectId: evermynd-987cb
+          entryPoint: ./landing_page
