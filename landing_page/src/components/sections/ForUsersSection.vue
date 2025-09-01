@@ -1,5 +1,5 @@
 <template>
-  <section class="for-users-section py-24 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+  <section class="for-users-section py-16 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900 dark:to-slate-800">
     <div class="container mx-auto px-6">
       <div class="section-header text-center mb-16">
         <h2 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
@@ -29,12 +29,12 @@
                 </div>
               </div>
               <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                <Video class="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                <PhoneCall class="h-5 w-5 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
 
             <!-- Chat Messages -->
-            <div class="chat-messages space-y-4 h-80 overflow-y-auto mb-4">
+            <div class="chat-messages space-y-4 h-96 overflow-y-auto mb-4">
               <div
                 v-for="(message, index) in chatMessages"
                 :key="index"
@@ -240,34 +240,13 @@
           </div>
         </div>
       </div>
-
-      <!-- User Benefits Grid -->
-      <div class="user-benefits-grid grid md:grid-cols-3 gap-8 mt-20">
-        <div
-          v-for="(benefit, index) in userBenefits"
-          :key="index"
-          class="benefit-card glass-card rounded-2xl p-6 text-center transform transition-all duration-500 hover:scale-105"
-        >
-          <div class="benefit-icon w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4">
-            <component :is="benefit.icon" class="h-8 w-8 text-white" />
-          </div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {{ benefit.title }}
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300 text-sm">
-            {{ benefit.description }}
-          </p>
-        </div>
-      </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import TypingText from '@/components/ui/TypingText.vue'
 import {
-  Video,
   Paperclip,
   Mic,
   Send,
@@ -277,12 +256,7 @@ import {
   Play,
   MessageCircle,
   Bookmark,
-  Clock,
-  Heart,
-  Users,
-  Brain,
-  Target,
-  Zap
+  PhoneCall
 } from 'lucide-vue-next'
 
 const chatMessages = [
@@ -392,38 +366,6 @@ const feedPosts = [
   }
 ]
 
-const userBenefits = [
-  {
-    icon: Clock,
-    title: "24/7 Availability",
-    description: "Get coaching and support whenever you need it, day or night"
-  },
-  {
-    icon: Brain,
-    title: "Personalized Learning",
-    description: "AI adapts to your learning style, pace, and personal goals"
-  },
-  {
-    icon: Target,
-    title: "Progress Tracking",
-    description: "Visual progress tracking and personalized recommendations"
-  },
-  {
-    icon: Heart,
-    title: "Emotional Support",
-    description: "Empathetic coaching that understands your challenges"
-  },
-  {
-    icon: Users,
-    title: "Community Learning",
-    description: "Learn from others' experiences while maintaining privacy"
-  },
-  {
-    icon: Zap,
-    title: "Instant Feedback",
-    description: "Get immediate responses to questions and challenges"
-  }
-]
 </script>
 
 <style scoped>

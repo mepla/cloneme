@@ -1,5 +1,5 @@
 <template>
-  <section class="for-creators-section py-24 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+  <section class="for-creators-section py-16 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
     <div class="container mx-auto px-6">
       <!-- Centered Section Header -->
       <div class="section-header text-center mb-16">
