@@ -168,14 +168,16 @@
                       <div v-else-if="index === 1" class="config-demo">
                         <div class="space-y-2">
                           <div class="flex items-center justify-between text-xs">
-                            <span class="text-gray-400">Voice Chat</span>
+                            <span class="text-gray-400">Voice Coaching</span>
                             <div class="w-8 h-4 bg-primary-500 rounded-full relative">
                               <div class="w-3 h-3 bg-white rounded-full absolute right-0.5 top-0.5"></div>
                             </div>
                           </div>
                           <div class="flex items-center justify-between text-xs">
-                            <span class="text-gray-400">Price: ${{ step.price }}/mo</span>
-                            <div class="text-primary-400">●</div>
+                            <span class="text-gray-400">Content Preview</span>
+                            <div class="w-8 h-4 bg-gray-300 dark:bg-gray-600 rounded-full relative">
+                              <div class="w-3 h-3 bg-white rounded-full absolute left-0.5 top-0.5"></div>
+                            </div>
                           </div>
                         </div>
                       </div>
