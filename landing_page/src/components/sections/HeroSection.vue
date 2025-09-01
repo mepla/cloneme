@@ -7,15 +7,15 @@
           <div class="flex items-center">
             <EvermyndLogo size="sm" gradient="bg-gradient-to-r from-blue-600 to-purple-600" />
           </div>
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2 md:space-x-4">
             <a
               data-formkit-toggle="1fe98e99bc"
               href="https://yef.kit.com/1fe98e99bc"
-              class="btn-primary text-sm px-4 py-2 transform transition-all duration-300 hover:scale-105 no-underline inline-block"
+              class="btn-primary text-xs md:text-sm px-3 md:px-4 py-2 transform transition-all duration-300 hover:scale-105 no-underline inline-block whitespace-nowrap"
             >
               Get Early Access
             </a>
-            <ThemeSwitcher />
+            <ThemeSwitcher class="hidden md:block" />
           </div>
         </div>
       </nav>
