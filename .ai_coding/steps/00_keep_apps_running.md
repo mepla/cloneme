@@ -1,0 +1,1 @@
+Keep bot backend and frontend projects running for testing. Frontend should run on both web and ios simulator at all times. Honor the ./config.json.

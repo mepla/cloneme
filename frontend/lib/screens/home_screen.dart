@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
+import '../widgets/evermynd_logo.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -12,7 +13,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EverMynd'),
+        title: const EvermyndLogo(size: LogoSize.small),
         backgroundColor: const Color(0xFF8C52FF),
         foregroundColor: Colors.white,
         actions: [
@@ -104,14 +105,16 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      Text(
-                        'Welcome to EverMynd!',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF1F2937),
+                      const Text(
+                        'Welcome to',
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Color(0xFF6B7280),
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: 8),
+                      const EvermyndLogo(size: LogoSize.large),
                       const SizedBox(height: 16),
                       Text(
                         'Hello ${state.user.displayName ?? state.user.email}!',

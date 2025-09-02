@@ -6,6 +6,7 @@ import 'blocs/auth/auth_state.dart';
 import 'repositories/auth_repository.dart';
 import 'services/api_client.dart';
 import 'services/secure_storage_service.dart';
+import 'widgets/evermynd_logo.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -108,26 +109,26 @@ class SplashScreen extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.psychology,
                 color: Colors.white,
                 size: 80,
               ),
-              SizedBox(height: 24),
-              Text(
-                'EverMynd',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+              const SizedBox(height: 24),
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [Colors.white, Colors.white70],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+                child: const EvermyndLogo(size: LogoSize.large),
               ),
-              SizedBox(height: 48),
-              CircularProgressIndicator(
+              const SizedBox(height: 48),
+              const CircularProgressIndicator(
                 color: Colors.white,
                 strokeWidth: 3,
               ),

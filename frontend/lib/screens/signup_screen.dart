@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
+import '../widgets/evermynd_logo.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 
@@ -61,33 +62,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 32),
                         child: Column(
                           children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF8C52FF), Color(0xFF4D0F99)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Icon(
-                                Icons.psychology,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                            ),
+                            const EvermyndLogo(size: LogoSize.large),
                             const SizedBox(height: 16),
-                            const Text(
-                              'Join EverMynd',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1F2937),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
                             const Text(
                               'Create your account to get started',
                               style: TextStyle(

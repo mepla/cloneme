@@ -1,7 +1,8 @@
 # Claude rules
 
 ## Code structure
-* There are 3 spearate projects under backend, frontend and landing_page. They each have their own stack and can be modified, tested and deployed separately. If you are asked to make changes, determine which project needs changing and avoid unnecessary changes in other projects. 
+* There are 4 spearate projects under backend, frontend, landing_page and utils. They each have their own stack and can be modified, tested and deployed separately. If you are asked to make changes, determine which project needs changing and avoid unnecessary changes in other projects. 
+* Use the ./config.json to know how to run the backend and frontend. If needed use scripts/dev.sh to manipulate the running processes.
 
 ## General
 * Do not automatically read the contents under .ai_coding/ direcotry. I will explicitly direct you to do so when needed.
