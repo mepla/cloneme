@@ -1,0 +1,259 @@
+{
+  "name": "YouTube Creator Finder with Contact Info",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f6c8c5b0-8c5a-4c5a-8c5a-8c5a8c5a8c5a",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/youtube/v3/search?part=snippet&q={{ encodeURIComponent($json.searchTopic || 'personal finance') }}&type=video&order=relevance&maxResults=50&key={{ $env.YOUTUBE_API_KEY }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4789-abcd-ef1234567890",
+      "name": "YouTube Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract unique channel IDs from search results\nconst channelIds = new Set();\n\nfor (const item of items) {\n  if (item.json.items) {\n    for (const video of item.json.items) {\n      if (video.snippet && video.snippet.channelId) {\n        channelIds.add(video.snippet.channelId);\n      }\n    }\n  }\n}\n\n// Return array of channel IDs (max 50 per API call)\nconst channelIdArray = Array.from(channelIds).slice(0, 50);\n\nreturn [{\n  json: {\n    channelIds: channelIdArray,\n    channelIdString: channelIdArray.join(',')\n  }\n}];"
+      },
+      "id": "b2c3d4e5-f6g7-4890-bcde-f12345678901",
+      "name": "Extract Channel IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id={{ $json.channelIdString }}&key={{ $env.YOUTUBE_API_KEY }}",
+        "options": {}
+      },
+      "id": "c3d4e5f6-g7h8-4901-cdef-g23456789012",
+      "name": "Get Channel Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter channels based on subscriber range\nconst results = [];\n\n// Get subscriber range from input (with defaults)\nconst minSubscribers = $input.first().json.minSubscribers || 100000;\nconst maxSubscribers = $input.first().json.maxSubscribers || 999999999; // No upper limit by default\n\nfor (const item of items) {\n  if (item.json.items) {\n    for (const channel of item.json.items) {\n      const subscriberCount = parseInt(channel.statistics.subscriberCount) || 0;\n      \n      if (subscriberCount >= minSubscribers && subscriberCount <= maxSubscribers) {\n        results.push({\n          json: {\n            channelId: channel.id,\n            channelTitle: channel.snippet.title,\n            subscriberCount: subscriberCount,\n            description: channel.snippet.description,\n            customUrl: channel.snippet.customUrl || '',\n            channelUrl: `https://www.youtube.com/channel/${channel.id}`,\n            aboutUrl: `https://www.youtube.com/channel/${channel.id}/about`,\n            thumbnails: channel.snippet.thumbnails\n          }\n        });\n      }\n    }\n  }\n}\n\nconsole.log(`Found ${results.length} channels with ${minSubscribers.toLocaleString()} - ${maxSubscribers.toLocaleString()} subscribers`);\nreturn results;"
+      },
+      "id": "d4e5f6g7-h8i9-4012-defg-h34567890123",
+      "name": "Filter Subscriber Range",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.aboutUrl }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        },
+        "continueOnFail": true,
+        "responseData": "allData"
+      },
+      "id": "e5f6g7h8-i9j0-4123-efgh-i45678901234",
+      "name": "Scrape Channel About Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge scraped content with original channel data\nconst results = [];\n\nfor (const item of items) {\n  // The HTTP Request node puts original data in 'json' and response in 'data' field\n  const channelData = item.json;\n  const scrapedContent = item.data || item.body || '';\n  \n  // Create merged result with both channel info and scraped content\n  const mergedResult = {\n    // Preserve all original channel information\n    channelId: channelData.channelId,\n    channelTitle: channelData.channelTitle,\n    subscriberCount: channelData.subscriberCount,\n    description: channelData.description,\n    customUrl: channelData.customUrl,\n    channelUrl: channelData.channelUrl,\n    aboutUrl: channelData.aboutUrl,\n    thumbnails: channelData.thumbnails,\n    // Add scraped content\n    scrapedData: scrapedContent\n  };\n  \n  results.push({ json: mergedResult });\n}\n\nconsole.log(`Merged ${results.length} channel records with scraped content`);\nreturn results;"
+      },
+      "id": "merge-channel-data-node-12345",
+      "name": "Merge Channel Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract contact information from scraped content\nconst results = [];\n\nfor (const item of items) {\n  // Get channel info and scraped content from merged data\n  const channelInfo = {\n    channelId: item.json.channelId || '',\n    channelTitle: item.json.channelTitle || 'Unknown Channel',\n    subscriberCount: item.json.subscriberCount || 0,\n    channelUrl: item.json.channelUrl || '',\n    aboutUrl: item.json.aboutUrl || '',\n    description: item.json.description || '',\n    customUrl: item.json.customUrl || '',\n    emails: [],\n    socialLinks: [],\n    businessInquiries: '',\n    contactInfo: ''\n  };\n\n  // Get scraped content from the merged data structure\n  const content = item.json.scrapedData || '';\n  \n  if (content && typeof content === 'string') {\n    // Extract email addresses using regex\n    const emailRegex = /\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b/g;\n    const emails = content.match(emailRegex) || [];\n    channelInfo.emails = [...new Set(emails)]; // Remove duplicates\n    \n    // Extract social media links\n    const socialRegex = /(https?:\\/\\/)?(www\\.)?(twitter|instagram|facebook|linkedin|tiktok|discord)\\.[^\\s)]+/gi;\n    const socialLinks = content.match(socialRegex) || [];\n    channelInfo.socialLinks = [...new Set(socialLinks)];\n    \n    // Look for business inquiry sections\n    const businessKeywords = ['business', 'inquiry', 'inquiries', 'collaboration', 'sponsor', 'partnership', 'contact'];\n    const lines = content.split('\\n');\n    \n    for (const line of lines) {\n      const lowerLine = line.toLowerCase();\n      if (businessKeywords.some(keyword => lowerLine.includes(keyword))) {\n        if (line.trim().length > 0 && line.trim().length < 200) {\n          channelInfo.businessInquiries += line.trim() + ' | ';\n        }\n      }\n    }\n    \n    // Clean up business inquiries\n    channelInfo.businessInquiries = channelInfo.businessInquiries.replace(/\\s+\\|\\s*$/, '');\n    \n    // Store original content for manual review if needed\n    channelInfo.contactInfo = content.substring(0, 500) + (content.length > 500 ? '...' : '');\n  } else {\n    // No content was scraped, note this for debugging\n    channelInfo.contactInfo = 'No content scraped from about page - may be blocked or invalid URL';\n  }\n  \n  results.push({ json: channelInfo });\n}\n\nconsole.log(`Processed ${results.length} channels for contact extraction`);\nreturn results;"
+      },
+      "id": "f6g7h8i9-j0k1-4234-fghi-j56789012345",
+      "name": "Extract Contact Information",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final formatting and summary\nconst results = [];\nlet totalChannels = 0;\nlet totalEmails = 0;\n\nfor (const item of items) {\n  totalChannels++;\n  \n  // Safely get data with fallbacks\n  const emails = item.json.emails || [];\n  const socialLinks = item.json.socialLinks || [];\n  const subscriberCount = item.json.subscriberCount || 0;\n  \n  totalEmails += emails.length;\n  \n  const finalResult = {\n    rank: totalChannels,\n    channelInfo: {\n      title: item.json.channelTitle || 'Unknown Channel',\n      subscribers: subscriberCount ? subscriberCount.toLocaleString() : '0',\n      url: item.json.channelUrl || '',\n      channelId: item.json.channelId || ''\n    },\n    contactInfo: {\n      emails: emails,\n      socialLinks: socialLinks,\n      businessInquiries: item.json.businessInquiries || 'Not found',\n      extractedContent: item.json.contactInfo || ''\n    },\n    searchMetadata: {\n      extractedAt: new Date().toISOString(),\n      hasDirectEmail: emails.length > 0,\n      hasSocialLinks: socialLinks.length > 0\n    }\n  };\n  \n  results.push({ json: finalResult });\n}\n\nconsole.log(`Final results: ${totalChannels} channels with ${totalEmails} total emails found`);\nreturn results;"
+      },
+      "id": "h8i9j0k1-l2m3-4456-hijk-l78901234567",
+      "name": "Format Final Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create summary of the search\nconst channelCount = items.length;\nconst totalEmails = items.reduce((sum, item) => sum + (item.json.contactInfo?.emails?.length || 0), 0);\nconst totalSocial = items.reduce((sum, item) => sum + (item.json.contactInfo?.socialLinks?.length || 0), 0);\nconst channelsWithEmails = items.filter(item => (item.json.contactInfo?.emails?.length || 0) > 0).length;\n\n// Get search parameters from the original input\nconst originalInput = $input.first().json;\nconst minSubs = originalInput.minSubscribers || 100000;\nconst maxSubs = originalInput.maxSubscribers || 999999999;\n\nconst summary = {\n  searchSummary: {\n    searchTopic: originalInput.searchTopic || 'personal finance',\n    subscriberRange: {\n      min: minSubs.toLocaleString(),\n      max: maxSubs === 999999999 ? 'No limit' : maxSubs.toLocaleString()\n    },\n    timestamp: new Date().toISOString(),\n    channelsFound: channelCount,\n    channelsWithEmails: channelsWithEmails,\n    totalEmailsFound: totalEmails,\n    totalSocialLinksFound: totalSocial,\n    emailSuccessRate: channelCount > 0 ? `${Math.round((channelsWithEmails / channelCount) * 100)}%` : '0%'\n  },\n  topChannels: items.slice(0, 5).map(item => ({\n    title: item.json.channelInfo.title,\n    subscribers: item.json.channelInfo.subscribers,\n    emailCount: item.json.contactInfo.emails.length,\n    hasBusinessContact: item.json.contactInfo.businessInquiries !== 'Not found'\n  }))\n};\n\nreturn [{ json: summary }];"
+      },
+      "id": "i9j0k1l2-m3n4-4567-ijkl-m89012345678",
+      "name": "Create Search Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "YouTube Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Search": {
+      "main": [
+        [
+          {
+            "node": "Extract Channel IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Channel IDs": {
+      "main": [
+        [
+          {
+            "node": "Get Channel Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Channel Details": {
+      "main": [
+        [
+          {
+            "node": "Filter Subscriber Range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Subscriber Range": {
+      "main": [
+        [
+          {
+            "node": "Scrape Channel About Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Channel About Page": {
+      "main": [
+        [
+          {
+            "node": "Merge Channel Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Channel Data": {
+      "main": [
+        [
+          {
+            "node": "Extract Contact Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Contact Information": {
+      "main": [
+        [
+          {
+            "node": "Format Final Results",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Search Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Manual Trigger": [
+      {
+        "json": {
+          "searchTopic": "personal finance",
+          "minSubscribers": 50000,
+          "maxSubscribers": 1000000
+        }
+      }
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-02T00:00:00.000Z",
+  "versionId": "1"
+}
