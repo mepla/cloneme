@@ -1,1 +1,1 @@
-List all the staged and unstaged files in the repo, ask me in a prompt and if I say "yes" or "y", stage all files and commit. Add a commit message that briefly summarizes the changes compared to last commit.
+List all the staged and unstaged files in the repo, ask me in a prompt and if I say "yes" or "y" or "p", stage all files and commit. Add a commit message that briefly summarizes the changes compared to last commit. If I answered "p" to the prompt, then immediately git push as well.
