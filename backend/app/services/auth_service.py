@@ -25,18 +25,7 @@ class AuthService:
             
             user_id = auth_response.user.id
             
-            # Create user profile using admin client
-            profile_data = {
-                "user_id": user_id,
-                "display_name": user_data.display_name or user_data.email.split("@")[0],
-                "roles": ["Consumer"],
-                "subscription_status": "free"
-            }
-            
-            profile_response = supabase_admin.table("user_profiles").insert(profile_data).execute()
-            
-            if not profile_response.data:
-                raise Exception("Failed to create user profile")
+            # Note: User profile is automatically created by database trigger
             
             # Create access token
             access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
