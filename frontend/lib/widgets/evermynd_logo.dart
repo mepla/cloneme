@@ -22,11 +22,11 @@ class EvermyndLogo extends StatelessWidget {
         // "y" with star above
         Stack(
           clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
           children: [
             _buildGradientText('y', fontSize),
             Positioned(
               top: size == LogoSize.small ? -8 : -10,
-              left: fontSize * 0.25, // Center the star above 'y'
               child: _buildGradientText('✦', starSize),
             ),
           ],
