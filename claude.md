@@ -1,8 +1,9 @@
 # Claude rules
 
-## Code structure
+## Code structure & guidelines
 * There are 4 spearate projects under backend, frontend, landing_page and utils. They each have their own stack and can be modified, tested and deployed separately. If you are asked to make changes, determine which project needs changing and avoid unnecessary changes in other projects. 
 * Use the .vscode/ to know what ports different projects are running on. Only use those ports when using Playwright or other MCPs. Never spin up a new instance of a project.
+* Every time you are doing any work in frontend/ make sure to follow the guideline in: .ai_coding/guidelines/flutter-multiplatform-development-guide.md
 
 ## General
 * Do not automatically read the contents under .ai_coding/ direcotry. I will explicitly direct you to do so when needed.
