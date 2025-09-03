@@ -1,279 +1,229 @@
 # Flutter Multiplatform Development Guide
 
-This comprehensive guide provides strategies and best practices for developing Flutter applications that run seamlessly across Mobile (iOS/Android) and Web platforms. This guide is based on official Flutter documentation, community best practices, and carefully selected package recommendations.
+## Core Philosophy: Web-First, Fluid Design
 
-## Core Philosophy
+**CRITICAL PRINCIPLE**: Design for the web first, then progressively enhance for smaller screens. This is the opposite of mobile-first design and is essential for preventing cramped, overflow-prone layouts on larger screens.
 
-Flutter's primary goal is to create apps from a single codebase that look and feel great on any platform. Success depends on understanding the distinction between:
+### The Fundamental Mistake: Mobile-First Constraints
 
-- **Responsive Design**: Adjusting UI elements to fit available space
-- **Adaptive Design**: Selecting appropriate layouts and input methods for different platforms
-
-## Architecture Strategy
-
-### 1. Platform-Agnostic Core Architecture
-
+❌ **NEVER DO THIS:**
 ```dart
-// Base structure for multiplatform apps
-class AppArchitecture {
-  // Shared business logic
-  static final services = <String, dynamic>{
-    'auth': AuthService(),
-    'data': DataService(), 
-    'navigation': NavigationService(),
+// This creates cramped web experiences
+final maxWidth = switch (breakpoint) {
+  ScreenBreakpoint.mobile => double.infinity,
+  ScreenBreakpoint.tablet => 400.0,  // Too narrow!
+  ScreenBreakpoint.desktop => 450.0, // Still too narrow!
+  ScreenBreakpoint.largeDesktop => 500.0, // Web feels cramped
+};
+```
+
+✅ **DO THIS INSTEAD:**
+```dart
+// Content-based sizing that feels natural
+static double getMaxContentWidth(ScreenBreakpoint breakpoint, {ContentType type = ContentType.general}) {
+  return switch (type) {
+    ContentType.form => switch (breakpoint) {
+      ScreenBreakpoint.mobile => double.infinity,     // Use full width
+      ScreenBreakpoint.tablet => 480.0,              // Comfortable form width
+      ScreenBreakpoint.desktop => 520.0,             // Slightly wider for better UX
+      ScreenBreakpoint.largeDesktop => 560.0,        // Generous but focused
+    },
+    ContentType.dashboard => switch (breakpoint) {
+      ScreenBreakpoint.mobile => double.infinity,     // Use full width
+      ScreenBreakpoint.tablet => double.infinity,     // Let content flow naturally
+      ScreenBreakpoint.desktop => 1200.0,            // Wide dashboard layout
+      ScreenBreakpoint.largeDesktop => 1400.0,       // Full dashboard experience
+    },
+    // ... more content types
   };
-  
-  // Platform-specific implementations
-  static final capabilities = AdaptiveCapabilities();
-  static final policies = AdaptivePolicies();
-}
-
-abstract class AdaptiveCapabilities {
-  bool get hasPhysicalKeyboard;
-  bool get hasMouse;
-  bool get supportsFileSystem;
-  bool get supportsNotifications;
-}
-
-abstract class AdaptivePolicies {
-  bool shouldUseBottomNavigation(double screenWidth);
-  bool shouldShowSidebar(double screenWidth);
-  int getOptimalColumns(double screenWidth);
 }
 ```
 
-### 2. Responsive Layout Foundation
+### Why Web-First Works Better
 
-Use a three-step approach for all layouts:
+1. **Natural Sizing**: Web layouts feel spacious and professional, not cramped
+2. **No Overflow Issues**: Content has room to breathe and expand naturally
+3. **Better UX**: Users expect web applications to use available space effectively
+4. **Progressive Enhancement**: Smaller screens get enhanced constraints, not artificial limitations
+5. **Content-Aware**: Different types of content get appropriate sizing (forms vs dashboards)
 
-#### Abstract: Extract Common Data
-```dart
-class NavigationDestinations {
-  static const List<AdaptiveDestination> destinations = [
-    AdaptiveDestination(
-      icon: Icons.home,
-      label: 'Home',
-      route: '/home',
-    ),
-    AdaptiveDestination(
-      icon: Icons.search, 
-      label: 'Search',
-      route: '/search',
-    ),
-    AdaptiveDestination(
-      icon: Icons.person,
-      label: 'Profile', 
-      route: '/profile',
-    ),
-  ];
-}
-```
+## Modern Breakpoint System
 
-#### Measure: Determine Screen Context
+Use modern, sensible breakpoints that align with contemporary web standards:
+
 ```dart
 class ScreenInfo {
   static ScreenBreakpoint getBreakpoint(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     
-    if (width < 600) return ScreenBreakpoint.mobile;
-    if (width < 1024) return ScreenBreakpoint.tablet;
-    if (width < 1440) return ScreenBreakpoint.desktop;
-    return ScreenBreakpoint.largeDesktop;
-  }
-  
-  static bool isTouchPrimary(BuildContext context) {
-    return MediaQuery.sizeOf(context).shortestSide < 600;
+    if (width < 640) return ScreenBreakpoint.mobile;    // Mobile phones
+    if (width < 768) return ScreenBreakpoint.tablet;    // Large phones, small tablets  
+    if (width < 1024) return ScreenBreakpoint.desktop;  // Tablets, small laptops
+    return ScreenBreakpoint.largeDesktop;               // Laptops, desktops, large screens
   }
 }
 
 enum ScreenBreakpoint {
-  mobile,    // < 600px
-  tablet,    // 600-1024px  
-  desktop,   // 1024-1440px
-  largeDesktop, // > 1440px
+  mobile,         // < 640px  - Optimized for touch, compact layouts
+  tablet,         // 640-768px - Mixed touch/mouse, moderate spacing
+  desktop,        // 768-1024px - Mouse-primary, comfortable spacing  
+  largeDesktop,   // > 1024px - Full desktop experience, generous spacing
 }
 ```
 
-#### Branch: Implement Adaptive Layouts
+**Why these breakpoints:**
+- **640px**: True mobile boundary, aligns with modern CSS frameworks
+- **768px**: Tablet portrait mode, where layouts start expanding
+- **1024px**: Desktop boundary where full layouts become possible
+- Above 1024px: Large desktop experience with maximum spacing
+
+## Content-Based Layout Strategy
+
+Different types of content need different sizing approaches:
+
+### Content Types
+
 ```dart
-class AdaptiveScaffold extends StatelessWidget {
-  const AdaptiveScaffold({
-    required this.title,
-    required this.body,
-    required this.currentIndex,
-    required this.onDestinationSelected,
+enum ContentType {
+  form,      // Login, signup, settings forms - focused, narrow
+  reading,   // Articles, documentation - optimal reading width
+  dashboard, // Home screens, admin panels - utilize full width
+  general,   // Mixed content - balanced approach
+}
+
+enum GridType {
+  card,      // Card-based layouts - moderate density
+  dense,     // Data tables, lists - high information density
+}
+```
+
+### Responsive Container Architecture
+
+```dart
+/// Philosophy: Web-first fluid design that progressively enhances for mobile
+class ResponsiveContainer extends StatelessWidget {
+  const ResponsiveContainer({
+    required this.child,
+    this.contentType = ContentType.general,
+    this.centerContent = true,
+    super.key,
   });
+  
+  final Widget child;
+  final ContentType contentType;
+  final bool centerContent;
 
   @override
   Widget build(BuildContext context) {
     final breakpoint = ScreenInfo.getBreakpoint(context);
+    final maxWidth = ScreenInfo.getMaxContentWidth(breakpoint, type: contentType);
+    final horizontalPadding = ScreenInfo.getHorizontalPadding(breakpoint);
     
-    return switch (breakpoint) {
-      ScreenBreakpoint.mobile => _buildMobileLayout(context),
-      ScreenBreakpoint.tablet => _buildTabletLayout(context),
-      ScreenBreakpoint.desktop || 
-      ScreenBreakpoint.largeDesktop => _buildDesktopLayout(context),
-    };
-  }
-  
-  Widget _buildMobileLayout(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: SafeArea(child: body),
-      bottomNavigationBar: NavigationBar(
-        destinations: NavigationDestinations.destinations
-          .map((dest) => NavigationDestination(
-            icon: Icon(dest.icon),
-            label: dest.label,
-          )).toList(),
-        selectedIndex: currentIndex,
-        onDestinationSelected: onDestinationSelected,
-      ),
+    Widget content = Container(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: child,
     );
-  }
-  
-  Widget _buildTabletLayout(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Row(
-          children: [
-            NavigationRail(
-              destinations: NavigationDestinations.destinations
-                .map((dest) => NavigationRailDestination(
-                  icon: Icon(dest.icon),
-                  label: Text(dest.label),
-                )).toList(),
-              selectedIndex: currentIndex,
-              onDestinationSelected: onDestinationSelected,
-            ),
-            const VerticalDivider(thickness: 1, width: 1),
-            Expanded(
-              child: Column(
-                children: [
-                  AppBar(title: Text(title), automaticallyImplyLeading: false),
-                  Expanded(child: body),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildDesktopLayout(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Row(
-          children: [
-            NavigationRail(
-              extended: true,
-              destinations: NavigationDestinations.destinations
-                .map((dest) => NavigationRailDestination(
-                  icon: Icon(dest.icon),
-                  label: Text(dest.label),
-                )).toList(),
-              selectedIndex: currentIndex,
-              onDestinationSelected: onDestinationSelected,
-            ),
-            const VerticalDivider(thickness: 1, width: 1),
-            Expanded(
-              child: Column(
-                children: [
-                  AppBar(title: Text(title), automaticallyImplyLeading: false),
-                  Expanded(child: body),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-```
-
-## Content Adaptation Strategies
-
-### 1. Responsive Content Layouts
-
-```dart
-class ResponsiveContentView extends StatelessWidget {
-  const ResponsiveContentView({required this.items});
-  
-  final List<ContentItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    final breakpoint = ScreenInfo.getBreakpoint(context);
     
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: _getMaxContentWidth(breakpoint),
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: _getHorizontalPadding(breakpoint),
-          ),
-          child: _buildContentGrid(context, breakpoint),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildContentGrid(BuildContext context, ScreenBreakpoint breakpoint) {
-    final columns = _getColumnCount(breakpoint);
-    
-    if (breakpoint == ScreenBreakpoint.mobile) {
-      return ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (context, index) => ContentCard(items[index]),
-      );
-    } else {
-      return GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: columns,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.2,
-        ),
-        itemCount: items.length,
-        itemBuilder: (context, index) => ContentCard(items[index]),
+    // Apply max width constraints only when beneficial
+    if (maxWidth != double.infinity) {
+      content = ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: content,
       );
     }
+    
+    // Center content on larger screens for visual balance
+    if (centerContent && breakpoint.index >= 1) {
+      content = Center(child: content);
+    }
+    
+    return content;
   }
-  
-  double _getMaxContentWidth(ScreenBreakpoint breakpoint) {
+}
+```
+
+### Specialized Containers
+
+```dart
+// For authentication screens - optimal form UX
+class FormContainer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ResponsiveContainer(
+      contentType: ContentType.form,
+      child: child,
+    );
+  }
+}
+
+// For home/admin screens - utilize full screen width
+class DashboardContainer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ResponsiveContainer(
+      contentType: ContentType.dashboard,
+      centerContent: false, // Dashboards should use full width
+      child: child,
+    );
+  }
+}
+```
+
+## Fluid Spacing System
+
+Spacing should scale naturally with screen size, not jump between arbitrary values:
+
+```dart
+class ScreenInfo {
+  /// Fluid spacing that scales naturally across screen sizes
+  static double getHorizontalPadding(ScreenBreakpoint breakpoint) {
     return switch (breakpoint) {
-      ScreenBreakpoint.mobile => double.infinity,
-      ScreenBreakpoint.tablet => 800,
-      ScreenBreakpoint.desktop => 1000,
-      ScreenBreakpoint.largeDesktop => 1200,
+      ScreenBreakpoint.mobile => 16.0,      // Compact but readable
+      ScreenBreakpoint.tablet => 24.0,      // More breathing room
+      ScreenBreakpoint.desktop => 32.0,     // Comfortable spacing
+      ScreenBreakpoint.largeDesktop => 40.0, // Generous spacing
     };
   }
   
-  double _getHorizontalPadding(ScreenBreakpoint breakpoint) {
+  /// Adaptive spacing for component internals
+  static EdgeInsetsGeometry getContentPadding(ScreenBreakpoint breakpoint) {
     return switch (breakpoint) {
-      ScreenBreakpoint.mobile => 16,
-      ScreenBreakpoint.tablet => 24,
-      ScreenBreakpoint.desktop => 32,
-      ScreenBreakpoint.largeDesktop => 48,
+      ScreenBreakpoint.mobile => const EdgeInsets.all(16.0),
+      ScreenBreakpoint.tablet => const EdgeInsets.all(20.0),
+      ScreenBreakpoint.desktop => const EdgeInsets.all(24.0),
+      ScreenBreakpoint.largeDesktop => const EdgeInsets.all(32.0),
     };
   }
   
-  int _getColumnCount(ScreenBreakpoint breakpoint) {
+  /// Gap sizes for layouts (margins, spacing between elements)
+  static double getLayoutGap(ScreenBreakpoint breakpoint) {
     return switch (breakpoint) {
-      ScreenBreakpoint.mobile => 1,
-      ScreenBreakpoint.tablet => 2,
-      ScreenBreakpoint.desktop => 3,
-      ScreenBreakpoint.largeDesktop => 4,
+      ScreenBreakpoint.mobile => 16.0,
+      ScreenBreakpoint.tablet => 20.0,
+      ScreenBreakpoint.desktop => 24.0,
+      ScreenBreakpoint.largeDesktop => 32.0,
     };
   }
 }
 ```
 
-### 2. Typography Scaling
+## Typography Scaling: Subtle and Natural
+
+Text should scale subtly across screen sizes - dramatic differences feel jarring:
+
+```dart
+/// Subtle text scaling - text should be readable but not dramatically different
+static double getTextScaleFactor(ScreenBreakpoint breakpoint) {
+  return switch (breakpoint) {
+    ScreenBreakpoint.mobile => 1.0,       // Base size
+    ScreenBreakpoint.tablet => 1.05,      // Slightly larger  
+    ScreenBreakpoint.desktop => 1.1,      // Comfortable increase
+    ScreenBreakpoint.largeDesktop => 1.15, // Generous but not excessive
+  };
+}
+```
+
+## Responsive Text Component
 
 ```dart
 class ResponsiveText extends StatelessWidget {
@@ -281,16 +231,19 @@ class ResponsiveText extends StatelessWidget {
     this.text, {
     this.style,
     this.maxLines,
+    this.textAlign,
+    super.key,
   });
   
   final String text;
   final TextStyle? style;
   final int? maxLines;
+  final TextAlign? textAlign;
 
   @override
   Widget build(BuildContext context) {
     final breakpoint = ScreenInfo.getBreakpoint(context);
-    final scaleFactor = _getScaleFactor(breakpoint);
+    final scaleFactor = ScreenInfo.getTextScaleFactor(breakpoint);
     
     return AutoSizeText(
       text,
@@ -300,34 +253,29 @@ class ResponsiveText extends StatelessWidget {
       maxLines: maxLines,
       minFontSize: 12,
       overflow: TextOverflow.ellipsis,
+      textAlign: textAlign,
     );
-  }
-  
-  double _getScaleFactor(ScreenBreakpoint breakpoint) {
-    return switch (breakpoint) {
-      ScreenBreakpoint.mobile => 1.0,
-      ScreenBreakpoint.tablet => 1.1,
-      ScreenBreakpoint.desktop => 1.2,
-      ScreenBreakpoint.largeDesktop => 1.3,
-    };
   }
 }
 ```
 
-## Input Method Adaptation
+## Adaptive Input Handling
 
-### 1. Universal Input Handling
+Support both touch and mouse/keyboard input seamlessly:
 
 ```dart
 class AdaptiveButton extends StatefulWidget {
   const AdaptiveButton({
     required this.onPressed,
     required this.child,
+    this.style,
     this.tooltip,
+    super.key,
   });
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget child;
+  final ButtonStyle? style;
   final String? tooltip;
 
   @override
@@ -336,7 +284,6 @@ class AdaptiveButton extends StatefulWidget {
 
 class _AdaptiveButtonState extends State<AdaptiveButton> {
   bool _isHovered = false;
-  bool _isFocused = false;
   
   @override
   Widget build(BuildContext context) {
@@ -344,45 +291,36 @@ class _AdaptiveButtonState extends State<AdaptiveButton> {
     
     Widget button = ElevatedButton(
       onPressed: widget.onPressed,
-      style: ElevatedButton.styleFrom(
-        minimumSize: Size(
-          isTouchPrimary ? 48 : 36,
-          isTouchPrimary ? 48 : 36,
+      style: widget.style?.copyWith(
+        visualDensity: MaterialStateProperty.all(
+          isTouchPrimary ? VisualDensity.comfortable : VisualDensity.compact,
         ),
-        visualDensity: isTouchPrimary 
-          ? VisualDensity.comfortable
-          : VisualDensity.compact,
       ),
       child: widget.child,
     );
     
-    // Add mouse and keyboard support for non-touch devices
+    // Enhanced mouse support for non-touch devices
     if (!isTouchPrimary) {
       button = MouseRegion(
-        cursor: SystemMouseCursors.click,
+        cursor: widget.onPressed != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
-        child: Focus(
-          onPressed: widget.onPressed,
-          onFocusChange: (focused) => setState(() => _isFocused = focused),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              boxShadow: _isHovered || _isFocused ? [
-                BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                ),
-              ] : null,
-            ),
-            child: button,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: _isHovered && widget.onPressed != null ? [
+              BoxShadow(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ] : null,
           ),
+          child: button,
         ),
       );
       
-      // Add tooltip for non-touch devices
       if (widget.tooltip != null) {
         button = Tooltip(
           message: widget.tooltip!,
@@ -396,362 +334,118 @@ class _AdaptiveButtonState extends State<AdaptiveButton> {
 }
 ```
 
-### 2. Keyboard Navigation Support
+## Layout Patterns
+
+### Dashboard Layouts
+
+For home screens and admin panels, use full width effectively:
 
 ```dart
-class AdaptiveShortcuts extends StatelessWidget {
-  const AdaptiveShortcuts({required this.child});
+Widget _buildDashboardContent(BuildContext context) {
+  final breakpoint = ScreenInfo.getBreakpoint(context);
+  final isLargeScreen = breakpoint.index >= 2; // desktop or larger
+  final gap = ScreenInfo.getLayoutGap(breakpoint);
   
-  final Widget child;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch, // Use full width
+    children: [
+      SizedBox(height: gap * 2),
+      
+      // Hero Section - centers itself
+      _buildHeroSection(context),
+      
+      SizedBox(height: gap * 3),
+      
+      // Content utilizes available space
+      if (isLargeScreen)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildUserInfoCard(context)),
+            SizedBox(width: gap),
+            Expanded(child: _buildActionsCard(context)),
+          ],
+        )
+      else
+        Column(
+          children: [
+            _buildUserInfoCard(context),
+            SizedBox(height: gap),
+            _buildActionsCard(context),
+          ],
+        ),
+        
+      SizedBox(height: gap * 2),
+    ],
+  );
+}
+```
 
+### Form Layouts
+
+For authentication and settings forms, use focused widths:
+
+```dart
+class AuthScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Shortcuts(
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.keyS, control: true): SaveIntent(),
-        SingleActivator(LogicalKeyboardKey.keyC, control: true): CopyIntent(),
-        SingleActivator(LogicalKeyboardKey.keyV, control: true): PasteIntent(),
-        SingleActivator(LogicalKeyboardKey.escape): EscapeIntent(),
-      },
-      child: Actions(
-        actions: {
-          SaveIntent: CallbackAction<SaveIntent>(
-            onInvoke: (_) => _handleSave(context),
+    return Scaffold(
+      body: SafeArea(
+        child: FormContainer( // Automatically handles appropriate form widths
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Form content naturally fits within appropriate constraints
+                _buildLogo(),
+                _buildEmailField(),
+                _buildPasswordField(),
+                _buildSubmitButton(),
+              ],
+            ),
           ),
-          CopyIntent: CallbackAction<CopyIntent>(
-            onInvoke: (_) => _handleCopy(context),
-          ),
-          PasteIntent: CallbackAction<PasteIntent>(
-            onInvoke: (_) => _handlePaste(context),
-          ),
-          EscapeIntent: CallbackAction<EscapeIntent>(
-            onInvoke: (_) => _handleEscape(context),
-          ),
-        },
-        child: child,
+        ),
       ),
     );
   }
-  
-  void _handleSave(BuildContext context) {
-    // Implementation
-  }
-  
-  void _handleCopy(BuildContext context) {
-    // Implementation
-  }
-  
-  void _handlePaste(BuildContext context) {
-    // Implementation
-  }
-  
-  void _handleEscape(BuildContext context) {
-    Navigator.of(context).maybePop();
-  }
 }
-
-// Custom intents
-class SaveIntent extends Intent {}
-class CopyIntent extends Intent {}
-class PasteIntent extends Intent {}
-class EscapeIntent extends Intent {}
 ```
 
-## State Management for Multiplatform
+## State Management Integration
 
-### 1. Platform-Aware State Management with BLoC
+Use BLoC for managing layout state:
 
 ```dart
-// BLoC for managing screen breakpoints and layout configuration
 class LayoutBloc extends Bloc<LayoutEvent, LayoutState> {
   LayoutBloc() : super(const LayoutState.initial()) {
     on<ScreenSizeChanged>(_onScreenSizeChanged);
-    on<OrientationChanged>(_onOrientationChanged);
   }
 
   void _onScreenSizeChanged(ScreenSizeChanged event, Emitter<LayoutState> emit) {
     final breakpoint = _getBreakpoint(event.size);
     final config = AdaptiveLayoutConfig(
       breakpoint: breakpoint,
-      showSidebar: breakpoint.index >= ScreenBreakpoint.tablet.index,
+      isTouchPrimary: event.size.shortestSide < 640,
+      showSidebar: breakpoint.index >= 2, // desktop and up
       useBottomNavigation: breakpoint == ScreenBreakpoint.mobile,
-      contentMaxWidth: switch (breakpoint) {
-        ScreenBreakpoint.mobile => double.infinity,
-        ScreenBreakpoint.tablet => 800,
-        ScreenBreakpoint.desktop => 1000,
-        ScreenBreakpoint.largeDesktop => 1200,
-      },
     );
     
     emit(LayoutState.configured(config));
   }
 
-  void _onOrientationChanged(OrientationChanged event, Emitter<LayoutState> emit) {
-    // Handle orientation changes
-    if (state is LayoutConfigured) {
-      final currentConfig = (state as LayoutConfigured).config;
-      final updatedConfig = currentConfig.copyWith(
-        orientation: event.orientation,
-      );
-      emit(LayoutState.configured(updatedConfig));
-    }
-  }
-
   ScreenBreakpoint _getBreakpoint(Size size) {
     final width = size.width;
-    if (width < 600) return ScreenBreakpoint.mobile;
-    if (width < 1024) return ScreenBreakpoint.tablet;
-    if (width < 1440) return ScreenBreakpoint.desktop;
+    if (width < 640) return ScreenBreakpoint.mobile;
+    if (width < 768) return ScreenBreakpoint.tablet;
+    if (width < 1024) return ScreenBreakpoint.desktop;
     return ScreenBreakpoint.largeDesktop;
   }
 }
-
-// Events
-abstract class LayoutEvent extends Equatable {
-  const LayoutEvent();
-  
-  @override
-  List<Object> get props => [];
-}
-
-class ScreenSizeChanged extends LayoutEvent {
-  const ScreenSizeChanged(this.size);
-  
-  final Size size;
-  
-  @override
-  List<Object> get props => [size];
-}
-
-class OrientationChanged extends LayoutEvent {
-  const OrientationChanged(this.orientation);
-  
-  final Orientation orientation;
-  
-  @override
-  List<Object> get props => [orientation];
-}
-
-// States
-abstract class LayoutState extends Equatable {
-  const LayoutState();
-  
-  const factory LayoutState.initial() = LayoutInitial;
-  const factory LayoutState.configured(AdaptiveLayoutConfig config) = LayoutConfigured;
-  
-  @override
-  List<Object> get props => [];
-}
-
-class LayoutInitial extends LayoutState {
-  const LayoutInitial();
-}
-
-class LayoutConfigured extends LayoutState {
-  const LayoutConfigured(this.config);
-  
-  final AdaptiveLayoutConfig config;
-  
-  @override
-  List<Object> get props => [config];
-}
-
-@immutable
-class AdaptiveLayoutConfig extends Equatable {
-  const AdaptiveLayoutConfig({
-    required this.breakpoint,
-    required this.showSidebar,
-    required this.useBottomNavigation, 
-    required this.contentMaxWidth,
-    this.orientation,
-  });
-  
-  final ScreenBreakpoint breakpoint;
-  final bool showSidebar;
-  final bool useBottomNavigation;
-  final double contentMaxWidth;
-  final Orientation? orientation;
-  
-  AdaptiveLayoutConfig copyWith({
-    ScreenBreakpoint? breakpoint,
-    bool? showSidebar,
-    bool? useBottomNavigation,
-    double? contentMaxWidth,
-    Orientation? orientation,
-  }) {
-    return AdaptiveLayoutConfig(
-      breakpoint: breakpoint ?? this.breakpoint,
-      showSidebar: showSidebar ?? this.showSidebar,
-      useBottomNavigation: useBottomNavigation ?? this.useBottomNavigation,
-      contentMaxWidth: contentMaxWidth ?? this.contentMaxWidth,
-      orientation: orientation ?? this.orientation,
-    );
-  }
-  
-  @override
-  List<Object?> get props => [breakpoint, showSidebar, useBottomNavigation, contentMaxWidth, orientation];
-}
 ```
 
-### 2. Persistent State Across Navigation
+## App Initialization
 
-```dart
-class ResponsivePageStorage extends StatefulWidget {
-  const ResponsivePageStorage({required this.child});
-  
-  final Widget child;
-
-  @override
-  State<ResponsivePageStorage> createState() => _ResponsivePageStorageState();
-}
-
-class _ResponsivePageStorageState extends State<ResponsivePageStorage> {
-  final PageStorageBucket _bucket = PageStorageBucket();
-  
-  @override
-  Widget build(BuildContext context) {
-    return PageStorage(
-      bucket: _bucket,
-      child: widget.child,
-    );
-  }
-}
-
-// Usage in lists
-class ResponsiveListView extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      key: const PageStorageKey('main_list'),
-      itemCount: items.length,
-      itemBuilder: (context, index) => ListTile(
-        title: Text(items[index].title),
-        onTap: () => _navigateToDetail(context, items[index]),
-      ),
-    );
-  }
-}
-```
-
-## Performance Optimization
-
-### 1. Lazy Loading Adaptive Components
-
-```dart
-class LazyAdaptiveWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final breakpoint = ScreenInfo.getBreakpoint(context);
-    
-    // Only build the component needed for current breakpoint
-    return switch (breakpoint) {
-      ScreenBreakpoint.mobile => const MobileView(),
-      ScreenBreakpoint.tablet => const TabletView(),
-      ScreenBreakpoint.desktop || 
-      ScreenBreakpoint.largeDesktop => const DesktopView(),
-    };
-  }
-}
-```
-
-### 2. Cached Layout Calculations
-
-```dart
-class OptimizedResponsiveWidget extends StatefulWidget {
-  @override
-  State<OptimizedResponsiveWidget> createState() => _OptimizedResponsiveWidgetState();
-}
-
-class _OptimizedResponsiveWidgetState extends State<OptimizedResponsiveWidget> {
-  ScreenBreakpoint? _lastBreakpoint;
-  Widget? _cachedLayout;
-  
-  @override
-  Widget build(BuildContext context) {
-    final currentBreakpoint = ScreenInfo.getBreakpoint(context);
-    
-    if (_lastBreakpoint != currentBreakpoint || _cachedLayout == null) {
-      _lastBreakpoint = currentBreakpoint;
-      _cachedLayout = _buildLayout(currentBreakpoint);
-    }
-    
-    return _cachedLayout!;
-  }
-  
-  Widget _buildLayout(ScreenBreakpoint breakpoint) {
-    // Expensive layout building logic here
-    return Container();
-  }
-}
-```
-
-## Testing Strategy
-
-### 1. Responsive Testing
-
-```dart
-// Test helper for different screen sizes
-class ResponsiveTestHelper {
-  static Widget wrapWithMediaQuery(Widget widget, Size size) {
-    return MaterialApp(
-      home: MediaQuery(
-        data: MediaQueryData(size: size),
-        child: widget,
-      ),
-    );
-  }
-  
-  static const Size mobileSize = Size(375, 667);
-  static const Size tabletSize = Size(768, 1024);
-  static const Size desktopSize = Size(1440, 900);
-}
-
-// Test example
-testWidgets('should adapt layout for different screen sizes', (tester) async {
-  // Test mobile layout
-  await tester.pumpWidget(
-    ResponsiveTestHelper.wrapWithMediaQuery(
-      AdaptiveScaffold(/* params */),
-      ResponsiveTestHelper.mobileSize,
-    ),
-  );
-  
-  expect(find.byType(NavigationBar), findsOneWidget);
-  expect(find.byType(NavigationRail), findsNothing);
-  
-  // Test tablet layout  
-  await tester.pumpWidget(
-    ResponsiveTestHelper.wrapWithMediaQuery(
-      AdaptiveScaffold(/* params */),
-      ResponsiveTestHelper.tabletSize,
-    ),
-  );
-  
-  expect(find.byType(NavigationBar), findsNothing);
-  expect(find.byType(NavigationRail), findsOneWidget);
-});
-```
-
-## Recommended Package Integration
-
-### 1. Essential Package Setup
-
-```yaml
-dependencies:
-  # Core responsive utilities
-  flutter_screenutil: ^5.9.3
-  auto_size_text: ^3.0.0
-  adaptive_breakpoints: ^0.1.7
-  
-  # Optional comprehensive framework
-  responsive_framework: ^1.5.1
-  
-  # State management
-  flutter_bloc: ^8.1.3
-  equatable: ^2.0.5
-```
-
-### 2. Initialization Setup
+Set up the responsive foundation:
 
 ```dart
 void main() {
@@ -766,23 +460,27 @@ class MyApp extends StatelessWidget {
         BlocProvider<LayoutBloc>(
           create: (context) => LayoutBloc(),
         ),
-        // Add other BLoCs here
+        // Other BLoCs...
       ],
       child: ScreenUtilInit(
-        designSize: const Size(375, 812), // Base design size
+        designSize: const Size(375, 812), // Base mobile design reference
         minTextAdapt: true,
         splitScreenMode: true,
         builder: (context, child) {
           return MaterialApp(
-            title: 'Adaptive App',
+            title: 'Responsive App',
             theme: ThemeData(
               visualDensity: VisualDensity.adaptivePlatformDensity,
               useMaterial3: true,
             ),
-            home: ResponsivePageStorage(
-              child: AdaptiveShortcuts(
-                child: MyHomePage(),
-              ),
+            home: LayoutBuilder(
+              builder: (context, constraints) {
+                // Trigger layout changes
+                final size = Size(constraints.maxWidth, constraints.maxHeight);
+                context.read<LayoutBloc>().add(ScreenSizeChanged(size));
+                
+                return MyHomePage();
+              },
             ),
           );
         },
@@ -792,47 +490,108 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-## File Structure Recommendation
+## Essential Dependencies
+
+```yaml
+dependencies:
+  # Responsive utilities
+  flutter_screenutil: ^5.9.3      # For consistent sizing
+  auto_size_text: ^3.0.0          # For responsive text
+  adaptive_breakpoints: ^0.1.7     # Additional breakpoint utilities
+  
+  # State management
+  flutter_bloc: ^8.1.3            # For layout and app state
+  equatable: ^2.0.5               # For state comparison
+  
+  # Optional enhancements  
+  responsive_framework: ^1.5.1     # Additional responsive utilities
+```
+
+## Key Principles to Remember
+
+### ✅ DO:
+1. **Design web-first**: Start with generous spacing and sizing
+2. **Use content-based constraints**: Forms, dashboards, reading content have different needs
+3. **Scale spacing fluidly**: Don't jump between drastically different values
+4. **Support all input methods**: Touch, mouse, keyboard seamlessly
+5. **Test across breakpoints**: Ensure layouts feel natural at every size
+6. **Use semantic containers**: FormContainer, DashboardContainer, etc.
+7. **Progressive enhancement**: Enhance smaller screens, don't constrain larger ones
+
+### ❌ NEVER:
+1. **Start with mobile constraints**: This creates cramped web experiences
+2. **Use arbitrary small max-widths**: 400px desktop forms feel cramped
+3. **Ignore content type**: All content is not the same
+4. **Create dramatic text scaling**: 1.0 → 1.4 feels jarring  
+5. **Forget overflow prevention**: Use Wrap instead of Row where appropriate
+6. **Assume touch-only input**: Support mouse and keyboard
+7. **Test only on mobile**: Web users have different expectations
+
+### The Web-First Mindset:
+
+- **Web users expect**: Spacious layouts, full utilization of screen space, mouse/keyboard support
+- **Mobile users expect**: Touch-optimized UI, appropriate sizing for thumbs
+- **Solution**: Start with excellent web experience, progressively enhance for mobile constraints
+
+## File Structure
 
 ```
 lib/
-├── blocs/
-│   ├── layout/
-│   │   ├── layout_bloc.dart
-│   │   ├── layout_event.dart
-│   │   └── layout_state.dart
-│   └── auth/
 ├── core/
-│   ├── adaptive/
-│   │   ├── breakpoints.dart
-│   │   ├── capabilities.dart
-│   │   └── policies.dart
-│   └── constants/
-├── presentation/
-│   ├── widgets/
-│   │   ├── adaptive/
-│   │   │   ├── adaptive_scaffold.dart
-│   │   │   ├── adaptive_button.dart
-│   │   │   └── responsive_text.dart
-│   │   └── common/
-│   └── screens/
-├── repositories/
-├── services/
-├── models/
-└── main.dart
+│   └── adaptive/
+│       ├── breakpoints.dart          # ScreenInfo class with ContentType enum
+│       └── content_types.dart        # ContentType and GridType definitions
+├── widgets/
+│   └── adaptive/
+│       ├── responsive_container.dart  # Base responsive container
+│       ├── form_container.dart       # Specialized form container  
+│       ├── dashboard_container.dart  # Specialized dashboard container
+│       ├── adaptive_button.dart      # Touch/mouse aware button
+│       └── responsive_text.dart      # Responsive text component
+├── blocs/
+│   └── layout/
+│       ├── layout_bloc.dart          # Layout state management
+│       ├── layout_event.dart         # Layout events
+│       └── layout_state.dart         # Layout states
+└── screens/
+    ├── auth/                         # Uses FormContainer
+    └── home/                         # Uses DashboardContainer
 ```
 
-## Key Best Practices Summary
+## Testing Strategy
 
-1. **Design responsive-first**: Start with flexible layouts, then add adaptive enhancements
-2. **Use window size, not device type**: Base decisions on available space, not platform
-3. **Support all input methods**: Touch, mouse, keyboard, and accessibility
-4. **Maintain performance**: Lazy load components and cache expensive calculations
-5. **Test across breakpoints**: Use device preview and automated testing
-6. **Follow platform guidelines**: Respect Material Design and platform conventions
-7. **Keep state consistent**: Use proper state management across layout changes
-8. **Accessibility first**: Support screen readers, high contrast, and text scaling
-9. **Progressive enhancement**: Start with mobile experience, enhance for larger screens
-10. **Measure and optimize**: Profile performance across different form factors
+Test all breakpoints to ensure natural feel:
 
-This guide provides a solid foundation for building Flutter apps that work seamlessly across mobile and web platforms while maintaining excellent user experience and performance.
+```dart
+class ResponsiveTestHelper {
+  static const Size mobileSize = Size(375, 667);     // iPhone SE
+  static const Size tabletSize = Size(768, 1024);    // iPad
+  static const Size desktopSize = Size(1200, 800);   // Desktop
+  static const Size largeSize = Size(1920, 1080);    // Large desktop
+
+  static Widget wrapWithMediaQuery(Widget widget, Size size) {
+    return MaterialApp(
+      home: MediaQuery(
+        data: MediaQueryData(size: size),
+        child: widget,
+      ),
+    );
+  }
+}
+
+testWidgets('dashboard should utilize full width on large screens', (tester) async {
+  await tester.pumpWidget(
+    ResponsiveTestHelper.wrapWithMediaQuery(
+      DashboardContainer(child: TestWidget()),
+      ResponsiveTestHelper.largeSize,
+    ),
+  );
+  
+  // Verify layout uses available space effectively
+  expect(find.text('Should not be cramped'), findsOneWidget);
+});
+```
+
+---
+
+**Remember**: This web-first approach prevents the cramped, overflow-prone layouts that occur when mobile-first constraints are applied to web interfaces. Content should feel natural and spacious on large screens while remaining functional and touch-friendly on mobile devices.
