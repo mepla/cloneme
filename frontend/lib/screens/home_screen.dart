@@ -3,7 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
+import '../widgets/adaptive/responsive_container.dart';
+import '../widgets/adaptive/responsive_text.dart';
 import '../widgets/evermynd_logo.dart';
+import '../widgets/ui/profile_avatar.dart';
+import '../widgets/ui/metrics_card.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -50,17 +54,9 @@ class HomeScreen extends StatelessWidget {
                   ],
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      child: Text(
-                        state.user.displayName?.isNotEmpty == true
-                            ? state.user.displayName![0].toUpperCase()
-                            : state.user.email[0].toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    child: ProfileAvatar(
+                      name: state.user.displayName ?? state.user.email,
+                      size: 32,
                     ),
                   ),
                 );
@@ -81,75 +77,95 @@ class HomeScreen extends StatelessWidget {
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthAuthenticated) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+              return DashboardContainer(
+                child: SingleChildScrollView(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF8C52FF), Color(0xFF4D0F99)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(60),
-                        ),
-                        child: const Icon(
-                          Icons.psychology,
-                          color: Colors.white,
-                          size: 60,
-                        ),
-                      ),
                       const SizedBox(height: 32),
-                      const Text(
-                        'Welcome to',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Color(0xFF6B7280),
+                      // Hero Section
+                      Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF8C52FF), Color(0xFF4D0F99)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(60),
+                              ),
+                              child: const Icon(
+                                Icons.psychology,
+                                color: Colors.white,
+                                size: 60,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            ResponsiveText(
+                              'Welcome to',
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                color: const Color(0xFF6B7280),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            const EvermyndLogo(size: LogoSize.large),
+                            const SizedBox(height: 16),
+                            ResponsiveText(
+                              'Hello ${state.user.displayName ?? state.user.email}!',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: const Color(0xFF6B7280),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      const EvermyndLogo(size: LogoSize.large),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Hello ${state.user.displayName ?? state.user.email}!',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: const Color(0xFF6B7280),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'You are successfully logged in.',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: const Color(0xFF6B7280),
-                        ),
-                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 48),
                       
+                      // Metrics Cards
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 1.4,
+                        children: [
+                          PolishedMetricsCard(
+                            title: 'Account Status',
+                            value: state.user.subscriptionStatus.toUpperCase(),
+                            icon: Icons.verified_user,
+                            iconColor: const Color(0xFF4CAF50),
+                          ),
+                          PolishedMetricsCard(
+                            title: 'Total Roles',
+                            value: '${state.user.roles.length}',
+                            icon: Icons.security,
+                            iconColor: const Color(0xFF2697FF),
+                            subtitle: state.user.roles.join(', '),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
                       // User Info Card
                       Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              ResponsiveText(
                                 'Account Information',
-                                style: TextStyle(
-                                  fontSize: 18,
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1F2937),
+                                  color: const Color(0xFF1F2937),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -217,7 +233,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
+            child: ResponsiveText(
               value,
               style: const TextStyle(
                 color: Color(0xFF1F2937),
