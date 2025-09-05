@@ -21,6 +21,15 @@ class CoachModel {
 
   bool get isActive => status == 'active';
   
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CoachModel && other.id == id;
+  }
+  
+  @override
+  int get hashCode => id.hashCode;
+  
   CoachModel copyWith({
     String? id,
     String? name,
