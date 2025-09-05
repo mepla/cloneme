@@ -4,6 +4,7 @@ import '../../../models/dashboard/coach_model.dart';
 import '../../../widgets/dashboard/coach_card.dart';
 import '../../../widgets/adaptive/responsive_container.dart';
 import 'create_coach_dialog.dart';
+import '../../../core/responsive/responsive.dart';
 
 class CoachesManagementScreen extends StatefulWidget {
   const CoachesManagementScreen({super.key});
@@ -70,53 +71,77 @@ class _CoachesManagementScreenState extends State<CoachesManagementScreen> {
       );
     }
 
+    final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
+    final padding = isMobile ? 16.0 : 24.0;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'AI Coaches',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937),
+          if (!isMobile)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'AI Coaches',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Create and manage your AI coaches.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF6B7280),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Create and manage your AI coaches.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF6B7280),
+                      ),
                     ),
+                  ],
+                ),
+                ElevatedButton.icon(
+                  onPressed: _showCreateCoachDialog,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Create New Coach'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.blue.withValues(alpha: 0.3),
                   ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: _showCreateCoachDialog,
+                ),
+              ],
+            ),
+          
+          // Mobile header with create button
+          if (isMobile)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showCreateCoachDialog(),
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Create New Coach'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3B82F6),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 4,
                   shadowColor: Colors.blue.withValues(alpha: 0.3),
                 ),
               ),
-            ],
-          ),
+            ),
 
           const SizedBox(height: 32),
 
@@ -167,11 +192,11 @@ class _CoachesManagementScreenState extends State<CoachesManagementScreen> {
               child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 24,
-                  mainAxisSpacing: 24,
-                  childAspectRatio: 0.8,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
+                  crossAxisSpacing: isMobile ? 16 : 24,
+                  mainAxisSpacing: isMobile ? 16 : 24,
+                  childAspectRatio: isMobile ? 1.0 : (isTablet ? 1.05 : 1.15),
                 ),
                 itemCount: _filteredCoaches.length,
                 itemBuilder: (context, index) {

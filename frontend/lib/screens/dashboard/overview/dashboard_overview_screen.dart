@@ -5,6 +5,7 @@ import '../../../services/mock/mock_dashboard_service.dart';
 import '../../../widgets/adaptive/responsive_container.dart';
 import '../../../widgets/dashboard/activity_feed.dart';
 import '../../../widgets/dashboard/stats_card.dart';
+import '../../../core/responsive/responsive.dart';
 
 class DashboardOverviewScreen extends StatefulWidget {
   const DashboardOverviewScreen({super.key});
@@ -51,50 +52,98 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
       );
     }
 
+    final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
+    final padding = isMobile ? 16.0 : 24.0;
+    final titleSize = isMobile ? 24.0 : 32.0;
+    final subtitleSize = isMobile ? 14.0 : 16.0;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(padding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Welcome Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Welcome back!',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937),
+          isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back!',
+                      style: TextStyle(
+                        fontSize: titleSize,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Here\'s what\'s happening with your AI coaches today.',
-                    style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: Navigate to create coach
-                },
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Create New Coach'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B82F6),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 4,
-                  shadowColor: Colors.blue.withValues(alpha: 0.3),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Here\'s what\'s happening with your AI coaches today.',
+                      style: TextStyle(fontSize: subtitleSize, color: const Color(0xFF6B7280)),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // TODO: Navigate to create coach
+                        },
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Create New Coach'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B82F6),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 4,
+                          shadowColor: Colors.blue.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome back!',
+                            style: TextStyle(
+                              fontSize: titleSize,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1F2937),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Here\'s what\'s happening with your AI coaches today.',
+                            style: TextStyle(fontSize: subtitleSize, color: const Color(0xFF6B7280)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // TODO: Navigate to create coach
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(isMobile ? 'Create' : 'Create New Coach'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B82F6),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 4,
+                        shadowColor: Colors.blue.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
 
           const SizedBox(height: 32),
 
@@ -103,11 +152,11 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 24,
-                mainAxisSpacing: 24,
-                childAspectRatio: 1.2,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 4),
+                crossAxisSpacing: isMobile ? 16 : 24,
+                mainAxisSpacing: isMobile ? 16 : 24,
+                childAspectRatio: isMobile ? 2.8 : 1.8,
               ),
               itemCount: _stats.length,
               itemBuilder: (context, index) {
@@ -127,18 +176,27 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
 
           // Activity and Quick Actions Row
           DashboardContainer(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Recent Activity (2/3 width)
-                Expanded(flex: 2, child: ActivityFeed(activities: _activities)),
+            child: isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ActivityFeed(activities: _activities),
+                      const SizedBox(height: 24),
+                      _buildQuickActions(),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Recent Activity (2/3 width)
+                      Expanded(flex: 2, child: ActivityFeed(activities: _activities)),
 
-                const SizedBox(width: 24),
+                      const SizedBox(width: 24),
 
-                // Quick Actions (1/3 width)
-                Expanded(flex: 1, child: _buildQuickActions()),
-              ],
-            ),
+                      // Quick Actions (1/3 width)
+                      Expanded(flex: 1, child: _buildQuickActions()),
+                    ],
+                  ),
           ),
 
           const SizedBox(height: 32),

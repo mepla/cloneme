@@ -3,6 +3,7 @@ import '../../../services/mock/mock_knowledge_service.dart';
 import '../../../models/dashboard/knowledge_article_model.dart';
 import '../../../widgets/dashboard/upload_drop_zone.dart';
 import '../../../widgets/adaptive/responsive_container.dart';
+import '../../../core/responsive/responsive.dart';
 
 class KnowledgeBaseScreen extends StatefulWidget {
   const KnowledgeBaseScreen({super.key});
@@ -205,73 +206,27 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
           const SizedBox(height: 24),
           
           // YouTube Integration
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _youtubeController,
-                  decoration: InputDecoration(
-                    labelText: 'YouTube Channel URL',
-                    hintText: 'https://youtube.com/@yourchannel',
-                    prefixIcon: const Icon(Icons.play_circle_outline, color: Colors.red),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: _handleYouTubeImport,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Import'),
-              ),
-            ],
+          _buildSocialMediaInput(
+            controller: _youtubeController,
+            label: 'YouTube Channel URL',
+            hint: 'https://youtube.com/@yourchannel',
+            icon: Icons.play_circle_outline,
+            iconColor: Colors.red,
+            buttonColor: Colors.red,
+            onImport: _handleYouTubeImport,
           ),
           
           const SizedBox(height: 16),
           
           // Instagram Integration
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _instagramController,
-                  decoration: InputDecoration(
-                    labelText: 'Instagram Page URL',
-                    hintText: 'https://instagram.com/yourpage',
-                    prefixIcon: const Icon(Icons.photo_camera_outlined, color: Colors.purple),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: _handleInstagramImport,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Import'),
-              ),
-            ],
+          _buildSocialMediaInput(
+            controller: _instagramController,
+            label: 'Instagram Page URL',
+            hint: 'https://instagram.com/yourpage',
+            icon: Icons.photo_camera_outlined,
+            iconColor: Colors.purple,
+            buttonColor: Colors.purple,
+            onImport: _handleInstagramImport,
           ),
         ],
       ),
@@ -421,7 +376,8 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  spacing: 8,
                   children: [
                     Text(
                       article.source.toUpperCase(),
@@ -431,12 +387,10 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Text(
                       '•',
                       style: TextStyle(color: Colors.grey[400]),
                     ),
-                    const SizedBox(width: 8),
                     Text(
                       _formatDate(article.createdAt),
                       style: const TextStyle(
@@ -445,12 +399,10 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                       ),
                     ),
                     if (article.size != null) ...[
-                      const SizedBox(width: 8),
                       Text(
                         '•',
                         style: TextStyle(color: Colors.grey[400]),
                       ),
-                      const SizedBox(width: 8),
                       Text(
                         article.formattedSize,
                         style: const TextStyle(
@@ -656,6 +608,87 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
         );
       }
     }
+  }
+
+  Widget _buildSocialMediaInput({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required Color iconColor,
+    required Color buttonColor,
+    required VoidCallback onImport,
+  }) {
+    final isMobile = Responsive.isMobile(context);
+
+    if (isMobile) {
+      return Column(
+        children: [
+          TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              hintText: hint,
+              prefixIcon: Icon(icon, color: iconColor),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onImport,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: buttonColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Import'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              hintText: hint,
+              prefixIcon: Icon(icon, color: iconColor),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        ElevatedButton(
+          onPressed: onImport,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: buttonColor,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text('Import'),
+        ),
+      ],
+    );
   }
 
   void _handleDeleteArticle(KnowledgeArticleModel article) {
