@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+
+import '../../core/responsive/responsive.dart';
 import '../../widgets/dashboard/dashboard_sidebar.dart';
-import 'overview/dashboard_overview_screen.dart';
 import 'coaches/coaches_management_screen.dart';
 import 'knowledge/knowledge_base_screen.dart';
+import 'overview/dashboard_overview_screen.dart';
 import 'settings/coach_settings_screen.dart';
-import '../../core/responsive/responsive.dart';
-import '../../core/responsive/breakpoints.dart';
 
 class DashboardMainScreen extends StatefulWidget {
   final DashboardSection? initialSection;
-  
+
   const DashboardMainScreen({super.key, this.initialSection});
 
   @override
@@ -19,7 +19,7 @@ class DashboardMainScreen extends StatefulWidget {
 class _DashboardMainScreenState extends State<DashboardMainScreen> {
   late DashboardSection _activeSection;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   @override
   void initState() {
     super.initState();
@@ -30,7 +30,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
   Widget build(BuildContext context) {
     final bool isMobile = Responsive.isMobile(context);
     final bool isDesktop = Responsive.isDesktop(context);
-    
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: isMobile
@@ -58,11 +58,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFFF8FAFC),
-                Color(0xFFF1F5F9),
-                Color(0xFFE2E8F0),
-              ],
+              colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9), Color(0xFFE2E8F0)],
             ),
           ),
           child: Row(
@@ -85,7 +81,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
                   children: [
                     // Header
                     _buildHeader(isMobile),
-                    
+
                     // Content
                     Expanded(
                       child: Container(
@@ -93,10 +89,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.white.withOpacity(0.2),
-                            ],
+                            colors: [Colors.transparent, Colors.white.withOpacity(0.2)],
                           ),
                         ),
                         child: _buildContent(),
@@ -144,12 +137,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
       padding: EdgeInsets.all(horizontalPadding),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.6),
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.3), width: 1)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -165,10 +153,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: IconButton(
-                icon: const Icon(
-                  Icons.menu,
-                  color: Color(0xFF1F2937),
-                ),
+                icon: const Icon(Icons.menu, color: Color(0xFF1F2937)),
                 onPressed: () {
                   _scaffoldKey.currentState?.openDrawer();
                 },
@@ -189,10 +174,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: subtitleSize,
-                    color: const Color(0xFF6B7280),
-                  ),
+                  style: TextStyle(fontSize: subtitleSize, color: const Color(0xFF6B7280)),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
