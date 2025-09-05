@@ -158,25 +158,17 @@ class _CoachSettingsScreenState extends State<CoachSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [
-                Color(0xFF1F2937),
-                Color(0xFF6B7280),
-              ],
-            ).createShader(bounds),
-            child: const Text(
-              'Select Coach to Configure',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+          const Text(
+            'Select Coach to Configure',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<CoachModel>(
-            value: _selectedCoach,
+            initialValue: _selectedCoach,
             onChanged: (coach) {
               setState(() {
                 _selectedCoach = coach;
@@ -265,20 +257,12 @@ class _CoachSettingsScreenState extends State<CoachSettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    Color(0xFF1F2937),
-                    Color(0xFF6B7280),
-                  ],
-                ).createShader(bounds),
-                child: const Text(
-                  'Quality Assurance',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+              const Text(
+                'Quality Assurance',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
                 ),
               ),
               TextButton.icon(
@@ -383,20 +367,12 @@ class _CoachSettingsScreenState extends State<CoachSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [
-                Color(0xFF1F2937),
-                Color(0xFF6B7280),
-              ],
-            ).createShader(bounds),
-            child: const Text(
-              'Available Features',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+          const Text(
+            'Available Features',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 8),
@@ -499,7 +475,7 @@ class _CoachSettingsScreenState extends State<CoachSettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF3B82F6),
+            activeTrackColor: const Color(0xFF3B82F6),
           ),
         ],
       ),
@@ -527,20 +503,12 @@ class _CoachSettingsScreenState extends State<CoachSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [
-                Color(0xFF1F2937),
-                Color(0xFF6B7280),
-              ],
-            ).createShader(bounds),
-            child: const Text(
-              'Subscription Pricing',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+          const Text(
+            'Subscription Pricing',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 8),
@@ -621,20 +589,12 @@ class _CoachSettingsScreenState extends State<CoachSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [
-                Color(0xFF1F2937),
-                Color(0xFF6B7280),
-              ],
-            ).createShader(bounds),
-            child: const Text(
-              'Publish Coach',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+          const Text(
+            'Publish Coach',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 8),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../services/mock/mock_dashboard_service.dart';
+
 import '../../../models/dashboard/dashboard_stats_model.dart';
-import '../../../widgets/dashboard/stats_card.dart';
-import '../../../widgets/dashboard/activity_feed.dart';
+import '../../../services/mock/mock_dashboard_service.dart';
 import '../../../widgets/adaptive/responsive_container.dart';
+import '../../../widgets/dashboard/activity_feed.dart';
+import '../../../widgets/dashboard/stats_card.dart';
 
 class DashboardOverviewScreen extends StatefulWidget {
   const DashboardOverviewScreen({super.key});
@@ -27,7 +28,7 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
     try {
       final stats = await MockDashboardService.getStats();
       final activities = await MockDashboardService.getRecentActivity();
-      
+
       setState(() {
         _stats = stats;
         _activities = activities;
@@ -62,29 +63,18 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFF1F2937),
-                        Color(0xFF6B7280),
-                      ],
-                    ).createShader(bounds),
-                    child: const Text(
-                      'Welcome back!',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                  const Text(
+                    'Welcome back!',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937),
                     ),
                   ),
                   const SizedBox(height: 4),
                   const Text(
                     'Here\'s what\'s happening with your AI coaches today.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF6B7280),
-                    ),
+                    style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
                   ),
                 ],
               ),
@@ -98,16 +88,14 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
                   backgroundColor: const Color(0xFF3B82F6),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 4,
                   shadowColor: Colors.blue.withValues(alpha: 0.3),
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 32),
 
           // Stats Grid
@@ -143,18 +131,12 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Recent Activity (2/3 width)
-                Expanded(
-                  flex: 2,
-                  child: ActivityFeed(activities: _activities),
-                ),
-                
+                Expanded(flex: 2, child: ActivityFeed(activities: _activities)),
+
                 const SizedBox(width: 24),
-                
+
                 // Quick Actions (1/3 width)
-                Expanded(
-                  flex: 1,
-                  child: _buildQuickActions(),
-                ),
+                Expanded(flex: 1, child: _buildQuickActions()),
               ],
             ),
           ),
@@ -168,10 +150,7 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 1,
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -183,20 +162,12 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Color(0xFF1F2937),
-                      Color(0xFF6B7280),
-                    ],
-                  ).createShader(bounds),
-                  child: const Text(
-                    'Performance Overview',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                const Text(
+                  'Performance Overview',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F2937),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -212,20 +183,13 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
                     ),
                     child: const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.trending_up,
-                            size: 48,
-                            color: Color(0xFF3B82F6),
-                          ),
+                          Icon(Icons.trending_up, size: 48, color: Color(0xFF3B82F6)),
                           SizedBox(height: 16),
                           Text(
                             'Performance chart will appear here',
@@ -254,10 +218,7 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -269,21 +230,9 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [
-                Color(0xFF1F2937),
-                Color(0xFF6B7280),
-              ],
-            ).createShader(bounds),
-            child: const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
+          const Text(
+            'Quick Actions',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
           ),
           const SizedBox(height: 16),
           _buildQuickActionButton(
@@ -338,10 +287,7 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
           ),
           child: Row(
             children: [
@@ -351,11 +297,7 @@ class _DashboardOverviewScreenState extends State<DashboardOverviewScreen> {
                   color: const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(
-                  icon,
-                  size: 16,
-                  color: const Color(0xFF6B7280),
-                ),
+                child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
               ),
               const SizedBox(width: 12),
               Text(

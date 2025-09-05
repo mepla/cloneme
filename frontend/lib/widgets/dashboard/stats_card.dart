@@ -54,20 +54,12 @@ class StatsCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [
-                          Color(0xFF1F2937),
-                          Color(0xFF6B7280),
-                        ],
-                      ).createShader(bounds),
-                      child: Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1F2937),
                       ),
                     ),
                   ],

@@ -82,20 +82,12 @@ class _CoachesManagementScreenState extends State<CoachesManagementScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFF1F2937),
-                        Color(0xFF6B7280),
-                      ],
-                    ).createShader(bounds),
-                    child: const Text(
-                      'AI Coaches',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                  const Text(
+                    'AI Coaches',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937),
                     ),
                   ),
                   const SizedBox(height: 4),

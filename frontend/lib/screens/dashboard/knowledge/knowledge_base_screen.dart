@@ -118,20 +118,12 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    Color(0xFF1F2937),
-                    Color(0xFF6B7280),
-                  ],
-                ).createShader(bounds),
-                child: const Text(
-                  'Upload Files',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+              const Text(
+                'Upload Files',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
                 ),
               ),
             ],
@@ -192,20 +184,12 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    Color(0xFF1F2937),
-                    Color(0xFF6B7280),
-                  ],
-                ).createShader(bounds),
-                child: const Text(
-                  'Social Media Integration',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+              const Text(
+                'Social Media Integration',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
                 ),
               ),
             ],
@@ -318,20 +302,12 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    Color(0xFF1F2937),
-                    Color(0xFF6B7280),
-                  ],
-                ).createShader(bounds),
-                child: const Text(
-                  'Knowledge Articles',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+              const Text(
+                'Knowledge Articles',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
                 ),
               ),
               // Filter Dropdown
