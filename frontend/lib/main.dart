@@ -10,6 +10,7 @@ import 'services/secure_storage_service.dart';
 import 'widgets/evermynd_logo.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/dashboard/dashboard_main_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -61,6 +62,10 @@ class AuthWrapper extends StatelessWidget {
         if (state is AuthLoading || state is AuthInitial) {
           return const SplashScreen();
         } else if (state is AuthAuthenticated) {
+          // Check if user has Creator role and redirect to dashboard
+          if (state.user.roles.contains('Creator')) {
+            return const DashboardMainScreen();
+          }
           return const HomeScreen();
         } else {
           return const LoginScreen();
