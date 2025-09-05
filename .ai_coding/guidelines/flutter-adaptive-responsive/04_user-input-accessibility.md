@@ -1,299 +1,533 @@
 # User Input & Accessibility
 
-## Overview
+Creating adaptive Flutter applications requires supporting various input methods beyond touch, ensuring accessibility for all users regardless of their abilities or preferred interaction methods.
 
-Flutter supports various input methods beyond touch, including scroll wheel, keyboard navigation, mouse interactions, and accessibility features. Creating adaptable interfaces that work well across different input methods is crucial for inclusive design.
+## Input Methods Overview
 
-## Input Methods Support
+Modern Flutter apps must support:
+- **Touch**: Primary mobile interaction
+- **Mouse**: Desktop and web users
+- **Keyboard**: Navigation and shortcuts
+- **Stylus/Pen**: Tablets and drawing apps
+- **Trackpad**: Laptop users
+- **Game controllers**: TV and gaming devices
+- **Assistive technologies**: Screen readers, switch controls
 
-### 1. Scroll Wheel Support
+## Scroll Wheel Support
 
-Most scrollable widgets support scroll wheel by default. For custom scroll behaviors:
+### Custom Scroll Wheel Behavior
+
+Most scrollable widgets support scroll wheel by default, but you can customize behavior:
 
 ```dart
-// Custom scroll behavior with Listener
-Listener(
-  onPointerSignal: (pointerSignal) {
-    if (pointerSignal is PointerScrollEvent) {
-      // Handle scroll wheel events
-      final delta = pointerSignal.scrollDelta.dy;
-      // Implement custom scrolling logic
-    }
-  },
-  child: CustomScrollView(/* your content */),
-)
+class CustomScrollWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerSignal: (pointerSignal) {
+        if (pointerSignal is PointerScrollEvent) {
+          // Custom scroll handling
+          final double scrollDelta = pointerSignal.scrollDelta.dy;
+          // Implement custom scroll behavior
+          // e.g., horizontal scrolling, zoom, or custom animations
+        }
+      },
+      child: SingleChildScrollView(
+        child: YourContent(),
+      ),
+    );
+  }
+}
+```
 
-// Using SingleChildScrollView with scroll physics
-SingleChildScrollView(
-  physics: const BouncingScrollPhysics(),
-  child: MyContent(),
+### Fine-tuning Scroll Physics
+
+```dart
+ScrollConfiguration(
+  behavior: ScrollConfiguration.of(context).copyWith(
+    // Enable scroll wheel on all platforms
+    scrollbars: true,
+    // Customize scroll physics
+    physics: BouncingScrollPhysics(),
+  ),
+  child: ListView(
+    // Your list content
+  ),
 )
 ```
 
-### 2. Tab Traversal and Focus Management
+## Tab Traversal and Focus
 
-Support keyboard navigation for users with assistive technologies:
+Supporting keyboard navigation is crucial for accessibility and power users.
+
+### FocusableActionDetector
+
+Create custom focusable controls:
 
 ```dart
-// Basic focusable widget
-FocusableActionDetector(
-  onPressed: () => handleAction(),
-  child: Container(
-    decoration: BoxDecoration(
-      border: Border.all(
-        color: Focus.of(context).hasFocus ? Colors.blue : Colors.grey,
-        width: 2,
-      ),
-    ),
-    child: MyCustomControl(),
-  ),
-)
-
-// Focus traversal group for complex layouts
-FocusTraversalGroup(
-  policy: WidgetOrderTraversalPolicy(),
-  child: Column(
-    children: [
-      FocusableWidget(order: 1),
-      FocusableWidget(order: 2),
-      FocusableWidget(order: 3),
-    ],
-  ),
-)
-
-// Request focus programmatically
-class MyWidget extends StatefulWidget {
-  @override
-  State<MyWidget> createState() => _MyWidgetState();
-}
-
-class _MyWidgetState extends State<MyWidget> {
-  final FocusNode _focusNode = FocusNode();
+class CustomButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  final Widget child;
   
   @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-  }
+  State<CustomButton> createState() => _CustomButtonState();
+}
+
+class _CustomButtonState extends State<CustomButton> {
+  bool _focused = false;
+  bool _hovering = false;
   
   @override
   Widget build(BuildContext context) {
-    return Focus(
-      focusNode: _focusNode,
-      onPressed: () => _focusNode.requestFocus(),
-      child: MyContent(),
+    return FocusableActionDetector(
+      autofocus: false,
+      onFocusChange: (focused) => setState(() => _focused = focused),
+      onShowHoverHighlight: (hovering) => setState(() => _hovering = hovering),
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.enter): ActivateIntent(),
+        LogicalKeySet(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onPressed();
+            return null;
+          },
+        ),
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: _hovering ? Colors.blue[100] : Colors.white,
+          border: Border.all(
+            color: _focused ? Colors.blue : Colors.grey,
+            width: _focused ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: EdgeInsets.all(16),
+        child: widget.child,
+      ),
     );
   }
 }
 ```
 
-### 3. Keyboard Accelerators and Shortcuts
+### Focus Traversal Order
 
-Implement keyboard shortcuts using multiple approaches:
+Control tab order with FocusTraversalGroup:
 
 ```dart
-// Using KeyboardListener
-KeyboardListener(
-  focusNode: FocusNode(),
-  onKeyEvent: (KeyEvent event) {
+class FormWithCustomTabOrder extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FocusTraversalGroup(
+      policy: OrderedTraversalPolicy(),
+      child: Column(
+        children: [
+          FocusTraversalOrder(
+            order: NumericFocusOrder(1),
+            child: TextField(
+              decoration: InputDecoration(labelText: 'First Name'),
+            ),
+          ),
+          FocusTraversalOrder(
+            order: NumericFocusOrder(2),
+            child: TextField(
+              decoration: InputDecoration(labelText: 'Last Name'),
+            ),
+          ),
+          FocusTraversalOrder(
+            order: NumericFocusOrder(3),
+            child: TextField(
+              decoration: InputDecoration(labelText: 'Email'),
+            ),
+          ),
+          // Skip this field in tab order
+          ExcludeFocus(
+            excluding: true,
+            child: TextField(
+              decoration: InputDecoration(labelText: 'Hidden Field'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## Keyboard Shortcuts
+
+Implement keyboard shortcuts for power users and accessibility.
+
+### Using Shortcuts Widget
+
+```dart
+class AppWithShortcuts extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Shortcuts(
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): 
+          SaveIntent(),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyN): 
+          NewDocumentIntent(),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyO): 
+          OpenDocumentIntent(),
+        LogicalKeySet(LogicalKeyboardKey.escape): 
+          CloseDialogIntent(),
+      },
+      child: Actions(
+        actions: {
+          SaveIntent: CallbackAction<SaveIntent>(
+            onInvoke: (_) => _saveDocument(),
+          ),
+          NewDocumentIntent: CallbackAction<NewDocumentIntent>(
+            onInvoke: (_) => _createNewDocument(),
+          ),
+          OpenDocumentIntent: CallbackAction<OpenDocumentIntent>(
+            onInvoke: (_) => _openDocument(),
+          ),
+          CloseDialogIntent: CallbackAction<CloseDialogIntent>(
+            onInvoke: (_) => Navigator.of(context).pop(),
+          ),
+        },
+        child: YourApp(),
+      ),
+    );
+  }
+}
+
+// Define intents
+class SaveIntent extends Intent {}
+class NewDocumentIntent extends Intent {}
+class OpenDocumentIntent extends Intent {}
+class CloseDialogIntent extends Intent {}
+```
+
+### Using KeyboardListener
+
+For more direct keyboard handling:
+
+```dart
+class KeyboardHandlingWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardListener(
+      focusNode: FocusNode(),
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent) {
+          // Handle arrow keys for custom navigation
+          if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            // Move selection up
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            // Move selection down
+          }
+        }
+      },
+      child: YourContent(),
+    );
+  }
+}
+```
+
+### Global Keyboard Listeners
+
+For app-wide shortcuts:
+
+```dart
+class GlobalShortcutManager {
+  static void initialize() {
+    HardwareKeyboard.instance.addHandler(_handleGlobalKey);
+  }
+  
+  static bool _handleGlobalKey(KeyEvent event) {
     if (event is KeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.enter) {
-        handleEnterKey();
-        return true;
+      // Check for global shortcuts
+      if (HardwareKeyboard.instance.isControlPressed &&
+          event.logicalKey == LogicalKeyboardKey.keyK) {
+        // Open command palette
+        _openCommandPalette();
+        return true; // Event handled
       }
-    }
-    return false;
-  },
-  child: MyWidget(),
-)
-
-// Using Shortcuts widget
-Shortcuts(
-  shortcuts: {
-    LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyS): SaveIntent(),
-    LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyC): CopyIntent(),
-  },
-  child: Actions(
-    actions: {
-      SaveIntent: CallbackAction<SaveIntent>(
-        onInvoke: (SaveIntent intent) => handleSave(),
-      ),
-      CopyIntent: CallbackAction<CopyIntent>(
-        onInvoke: (CopyIntent intent) => handleCopy(),
-      ),
-    },
-    child: MyContent(),
-  ),
-)
-
-// Global keyboard listeners
-class _MyAppState extends State<MyApp> {
-  @override
-  void initState() {
-    super.initState();
-    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
-  }
-  
-  @override
-  void dispose() {
-    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
-    super.dispose();
-  }
-  
-  bool _handleKeyEvent(KeyEvent event) {
-    if (event is KeyDownEvent) {
-      // Handle global keyboard shortcuts
-      return true; // Event consumed
     }
     return false; // Event not handled
   }
+  
+  static void _openCommandPalette() {
+    // Implementation
+  }
+}
+```
+
+## Mouse Interactions
+
+Enhance user experience with mouse-specific interactions.
+
+### MouseRegion for Hover Effects
+
+```dart
+class InteractiveCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  
+  @override
+  State<InteractiveCard> createState() => _InteractiveCardState();
 }
 
-// Define custom intents
-class SaveIntent extends Intent {}
-class CopyIntent extends Intent {}
-```
-
-### 4. Mouse Interactions
-
-Use MouseRegion for enhanced mouse support:
-
-```dart
-// Mouse hover effects
-MouseRegion(
-  cursor: SystemMouseCursors.click,
-  onEnter: (_) => setState(() => isHovered = true),
-  onExit: (_) => setState(() => isHovered = false),
-  onHover: (PointerHoverEvent event) {
-    // Handle mouse movement
-    final position = event.localPosition;
-    // Update hover state based on position
-  },
-  child: AnimatedContainer(
-    duration: Duration(milliseconds: 200),
-    decoration: BoxDecoration(
-      color: isHovered ? Colors.blue.shade100 : Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: isHovered ? [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 8,
-          offset: Offset(0, 2),
+class _InteractiveCardState extends State<InteractiveCard> {
+  bool _isHovered = false;
+  
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: widget.onTap != null 
+        ? SystemMouseCursors.click 
+        : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: _isHovered ? Colors.grey[100] : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(_isHovered ? 0.2 : 0.1),
+              blurRadius: _isHovered ? 8 : 4,
+              offset: Offset(0, _isHovered ? 4 : 2),
+            ),
+          ],
         ),
-      ] : null,
-    ),
-    child: MyContent(),
-  ),
-)
-
-// Different cursor types
-MouseRegion(
-  cursor: SystemMouseCursors.resizeColumn, // or resizeRow, grab, etc.
-  child: MyResizableWidget(),
-)
-
-// Context menus on right-click
-GestureDetector(
-  onSecondaryTapDown: (TapDownDetails details) {
-    showContextMenu(
-      context: context,
-      position: details.globalPosition,
-      items: [
-        PopupMenuItem(child: Text('Copy')),
-        PopupMenuItem(child: Text('Paste')),
-        PopupMenuItem(child: Text('Delete')),
-      ],
+        child: InkWell(
+          onTap: widget.onTap,
+          child: widget.child,
+        ),
+      ),
     );
-  },
-  child: MyContent(),
+  }
+}
+```
+
+### Custom Cursors
+
+```dart
+MouseRegion(
+  cursor: SystemMouseCursors.text,     // For text fields
+  cursor: SystemMouseCursors.click,    // For clickable elements
+  cursor: SystemMouseCursors.grab,     // For draggable elements
+  cursor: SystemMouseCursors.resizeUpDown, // For resizable elements
+  cursor: SystemMouseCursors.forbidden,    // For disabled elements
+  child: YourWidget(),
 )
 ```
 
-## Visual Density Adaptation
+## Visual Density
 
-Adjust hit areas and component sizes across different input devices:
+Adjust widget hit areas for different input devices.
+
+### Configuring Visual Density
 
 ```dart
-// Configure visual density in MaterialApp
 MaterialApp(
   theme: ThemeData(
-    visualDensity: VisualDensity.adaptivePlatformDensity, // Adaptive density
-    // Or set specific density:
-    // visualDensity: VisualDensity.compact, // Smaller touch targets
-    // visualDensity: VisualDensity.comfortable, // Larger touch targets
+    // Adapt density based on platform
+    visualDensity: VisualDensity.adaptivePlatformDensity,
   ),
-  home: MyHomePage(),
 )
 
-// Custom visual density based on input method
-Widget buildAdaptiveButton(BuildContext context) {
-  final hasTouch = MediaQuery.of(context).size.shortestSide < 600;
+// Or create custom density
+class AdaptiveDensity {
+  static VisualDensity getDensity(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    final size = MediaQuery.sizeOf(context);
+    
+    // Compact for mobile touch
+    if (platform == TargetPlatform.iOS || 
+        platform == TargetPlatform.android) {
+      return VisualDensity.compact;
+    }
+    
+    // Standard for desktop with mouse
+    if (size.width > 600) {
+      return VisualDensity.standard;
+    }
+    
+    // Comfortable for tablets
+    return VisualDensity.comfortable;
+  }
+}
+```
+
+### Custom Visual Density
+
+```dart
+class CustomDensityButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final VisualDensity visualDensity;
   
-  return ElevatedButton(
-    style: ElevatedButton.styleFrom(
-      visualDensity: hasTouch 
-        ? VisualDensity.comfortable  // Larger for touch
-        : VisualDensity.compact,     // Smaller for mouse/keyboard
-      minimumSize: Size(
-        hasTouch ? 48 : 32, // Minimum touch target size
-        hasTouch ? 48 : 32,
+  @override
+  Widget build(BuildContext context) {
+    // Adjust padding based on density
+    final basePadding = 16.0;
+    final horizontalPadding = basePadding + visualDensity.horizontal * 4;
+    final verticalPadding = basePadding + visualDensity.vertical * 4;
+    
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        ),
       ),
-    ),
-    onPressed: () {},
-    child: Text('Adaptive Button'),
-  );
+      child: Text(label),
+    );
+  }
 }
 ```
 
 ## Accessibility Features
 
-### Text Scaling Support
+### Screen Reader Support
 
 ```dart
-// Respect system text scaling
-Text(
-  'Scalable text',
-  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-    fontSize: Theme.of(context).textTheme.bodyLarge!.fontSize! * 
-              MediaQuery.textScaleFactorOf(context),
+Semantics(
+  label: 'Play button',
+  hint: 'Double tap to play the video',
+  button: true,
+  enabled: true,
+  child: IconButton(
+    icon: Icon(Icons.play_arrow),
+    onPressed: _playVideo,
   ),
-)
-
-// Limit text scaling for specific components
-MediaQuery(
-  data: MediaQuery.of(context).copyWith(
-    textScaleFactor: math.min(MediaQuery.textScaleFactorOf(context), 1.5),
-  ),
-  child: MyFixedSizeWidget(),
 )
 ```
 
-### High Contrast and Bold Text Support
+### Semantic Annotations
 
 ```dart
-Widget build(BuildContext context) {
-  final boldText = MediaQuery.boldTextOf(context);
-  final highContrast = MediaQuery.highContrastOf(context);
+class AccessibleList extends StatelessWidget {
+  final List<String> items;
   
-  return Text(
-    'Accessible text',
-    style: TextStyle(
-      fontWeight: boldText ? FontWeight.bold : FontWeight.normal,
-      color: highContrast ? Colors.black : Colors.grey.shade800,
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return Semantics(
+          label: 'Item ${index + 1} of ${items.length}',
+          value: items[index],
+          onTapHint: 'Double tap to select',
+          child: ListTile(
+            title: Text(items[index]),
+            onTap: () => _selectItem(index),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+### High Contrast Support
+
+```dart
+class ContrastAwareWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isHighContrast = mediaQuery.highContrast;
+    
+    return Container(
+      decoration: BoxDecoration(
+        border: isHighContrast 
+          ? Border.all(color: Colors.black, width: 2)
+          : null,
+        color: isHighContrast 
+          ? Colors.white 
+          : Colors.grey[100],
+      ),
+      child: Text(
+        'Adaptive Content',
+        style: TextStyle(
+          color: isHighContrast 
+            ? Colors.black 
+            : Colors.grey[700],
+          fontWeight: isHighContrast 
+            ? FontWeight.bold 
+            : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+}
+```
+
+### Reduced Motion
+
+```dart
+class MotionAwareAnimation extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final disableAnimations = mediaQuery.disableAnimations;
+    
+    return AnimatedContainer(
+      duration: disableAnimations 
+        ? Duration.zero 
+        : Duration(milliseconds: 300),
+      // Animation properties
+    );
+  }
+}
+```
+
+## Testing Accessibility
+
+### Using Accessibility Inspector
+
+```dart
+void main() {
+  // Enable semantics debugger in development
+  runApp(MaterialApp(
+    showSemanticsDebugger: true, // Shows semantic tree overlay
+    home: MyApp(),
+  ));
+}
+```
+
+### Automated Accessibility Testing
+
+```dart
+testWidgets('Button has correct semantics', (tester) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: ElevatedButton(
+          onPressed: () {},
+          child: Text('Click me'),
+        ),
+      ),
     ),
   );
-}
+  
+  // Check semantics
+  final semantics = tester.getSemantics(find.text('Click me'));
+  expect(semantics.label, 'Click me');
+  expect(semantics.hasFlag(ui.SemanticsFlag.isButton), true);
+  expect(semantics.hasFlag(ui.SemanticsFlag.isEnabled), true);
+});
 ```
 
 ## Best Practices
 
-1. **Support multiple input methods** - don't assume touch-only
-2. **Implement proper focus management** for keyboard navigation
-3. **Use semantic widgets** with proper labels and hints
-4. **Test with screen readers** and assistive technologies
-5. **Respect system accessibility settings** like text scaling and high contrast
-6. **Provide keyboard shortcuts** for common actions
-7. **Use appropriate cursor styles** for different interactions
-8. **Implement hover states** for mouse interactions
-9. **Ensure minimum touch target sizes** (48x48 logical pixels)
-10. **Test across different input devices** and accessibility settings
+1. **Always support keyboard navigation**: Every interactive element should be keyboard accessible
+2. **Provide visual feedback**: Show focus indicators, hover states, and pressed states
+3. **Use semantic widgets**: Prefer semantic widgets over generic containers
+4. **Test with assistive technologies**: Use screen readers to test your app
+5. **Support all input methods**: Don't assume users will only use touch
+6. **Respect user preferences**: Honor system accessibility settings
+7. **Provide keyboard shortcuts**: Add shortcuts for common actions
+8. **Make hit targets accessible**: Minimum 48x48 dp for touch targets

@@ -1,322 +1,418 @@
 # Capabilities & Policies
 
-## Overview
+Understanding the difference between capabilities and policies is crucial for writing maintainable, platform-agnostic Flutter code that can adapt to different devices and requirements.
 
-Flutter recommends creating `Capability` and `Policy` classes to handle different device behaviors in a maintainable and testable way. This approach moves away from simple platform checks to more nuanced feature detection.
-
-## Concepts
+## Understanding Capabilities vs Policies
 
 ### Capabilities
-Define what code or devices **can** do, such as:
-- API existence
-- OS restrictions  
-- Hardware requirements
-- Feature availability
+"Capabilities" define what code or a device **can** do:
+- API existence and availability
+- Operating system restrictions
+- Hardware requirements and features
+- Platform limitations
+- Technical constraints
 
 ### Policies
-Define what code **should** do, including:
-- App store guidelines
-- Design preferences
-- Platform-specific features
-- Business rules
+"Policies" define what code **should** do:
+- App store guidelines and requirements
+- Design preferences and conventions
+- Business rules and decisions
+- Platform-specific user expectations
+- Legal and compliance requirements
 
-## Implementation Patterns
+## The Problem with Platform Checks
 
-### 1. Abstract Capability Classes
+### ❌ Bad: Direct Platform Checks
 
 ```dart
-// Base capability interface
-abstract class Capability<T> {
-  T get value;
-  bool get isAvailable;
-}
-
-// Device capabilities
-abstract class DeviceCapabilities {
-  bool get hasCamera;
-  bool get hasGPS;
-  bool get hasBiometric;
-  bool get supportsNFC;
-  bool get hasVibration;
-}
-
-// Platform capabilities
-abstract class PlatformCapabilities {
-  bool get supportsFileSystem;
-  bool get supportsNotifications;
-  bool get supportsBackgroundTasks;
-  bool get supportsAppBadges;
-}
-
-// Input capabilities
-abstract class InputCapabilities {
-  bool get hasPhysicalKeyboard;
-  bool get hasMouse;
-  bool get hasStylus;
-  bool get supportsMultitouch;
-  bool get hasGamepad;
+// DON'T DO THIS
+class PaymentScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: Platform.isIOS ? null : _handlePurchase,
+      child: Text('Purchase'),
+    );
+  }
 }
 ```
 
-### 2. Concrete Implementations
+This approach has several problems:
+- Unclear why iOS is different
+- Hard to test
+- Difficult to modify when requirements change
+- Couples business logic to platform detection
+
+### ✅ Good: Abstraction with Clear Intent
 
 ```dart
-class FlutterDeviceCapabilities implements DeviceCapabilities {
-  @override
-  bool get hasCamera => _checkCameraPermission();
-  
-  @override
-  bool get hasGPS => _checkLocationServices();
-  
-  @override
-  bool get hasBiometric => _checkBiometricSupport();
-  
-  @override
-  bool get supportsNFC => Platform.isAndroid; // NFC mostly Android
-  
-  @override
-  bool get hasVibration => !kIsWeb; // Web doesn't support vibration
-  
-  bool _checkCameraPermission() {
-    // Implementation using camera plugin
-    return true; // Simplified
+// DO THIS INSTEAD
+class PaymentPolicy {
+  // Clearly documents WHY the behavior differs
+  bool shouldAllowExternalPurchase() {
+    // External payment links are prohibited by Apple App Store guidelines
+    // See: https://developer.apple.com/app-store/review/guidelines/#3.1.1
+    return !Platform.isIOS;
   }
   
-  bool _checkLocationServices() {
-    // Implementation using location plugin
-    return true; // Simplified
+  bool shouldShowPurchaseButton() {
+    // On iOS, we use native StoreKit instead
+    return !Platform.isIOS || _hasStoreKitIntegration();
+  }
+  
+  String getPurchaseButtonText() {
+    if (Platform.isIOS) {
+      return 'Purchase with Apple Pay';
+    } else if (Platform.isAndroid) {
+      return 'Purchase with Google Pay';
+    } else {
+      return 'Purchase';
+    }
+  }
+}
+```
+
+## Creating Capability Classes
+
+Organize technical capabilities by feature:
+
+```dart
+abstract class DeviceCapabilities {
+  bool get hasCamera;
+  bool get hasGPS;
+  bool get hasBiometricAuth;
+  bool get hasNFC;
+  bool get hasStylus;
+  bool get canMakePhoneCalls;
+  bool get canSendSMS;
+  bool get hasGyroscope;
+  bool get hasAccelerometer;
+}
+
+class PlatformDeviceCapabilities implements DeviceCapabilities {
+  @override
+  bool get hasCamera => _checkCameraAvailability();
+  
+  @override
+  bool get hasBiometricAuth => _checkBiometricSupport();
+  
+  @override
+  bool get hasNFC {
+    // NFC is available on most modern Android devices and newer iPhones
+    if (Platform.isAndroid) {
+      return _checkAndroidNFC();
+    } else if (Platform.isIOS) {
+      // iPhone 7 and later support NFC
+      return _checkIOSNFC();
+    }
+    return false;
+  }
+  
+  @override
+  bool get canMakePhoneCalls {
+    // Tablets typically can't make phone calls
+    if (Platform.isIOS) {
+      return _deviceModel.contains('iPhone');
+    } else if (Platform.isAndroid) {
+      return _hasTelephonyFeature();
+    }
+    return false;
+  }
+  
+  // Private implementation methods
+  bool _checkCameraAvailability() {
+    // Implementation using camera plugin
   }
   
   bool _checkBiometricSupport() {
     // Implementation using local_auth plugin
-    return true; // Simplified
-  }
-}
-
-class FlutterInputCapabilities implements InputCapabilities {
-  @override
-  bool get hasPhysicalKeyboard {
-    // Detect based on form factor and platform
-    if (kIsWeb) return true;
-    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) return true;
-    return false; // Mobile devices typically don't have physical keyboards
-  }
-  
-  @override
-  bool get hasMouse {
-    return !Platform.isIOS && !Platform.isAndroid;
-  }
-  
-  @override
-  bool get hasStylus {
-    // Could be enhanced to detect actual stylus support
-    return Platform.isIOS || Platform.isAndroid;
-  }
-  
-  @override
-  bool get supportsMultitouch {
-    return Platform.isIOS || Platform.isAndroid || kIsWeb;
-  }
-  
-  @override
-  bool get hasGamepad {
-    // Desktop platforms typically support gamepads
-    return Platform.isWindows || Platform.isMacOS || Platform.isLinux;
   }
 }
 ```
 
-### 3. Policy Classes
+## Creating Policy Classes
+
+Organize business rules and platform conventions:
 
 ```dart
-// UI Policies
-abstract class UIPolicy {
-  bool shouldUseBottomNavigation(double screenWidth);
-  bool shouldShowSidebar(double screenWidth);
-  int getGridColumns(double screenWidth);
-  double getMaxContentWidth();
+abstract class AppPolicies {
+  // Store policies
+  bool shouldAllowExternalPayments();
+  bool shouldShowAds();
+  bool shouldRequestAppStoreReview();
+  
+  // Design policies
+  bool shouldUseNativeNavigation();
+  bool shouldShowSplashScreen();
+  EdgeInsets getDefaultPadding();
+  
+  // Privacy policies
+  bool shouldRequestTrackingPermission();
+  bool shouldShowCookieBanner();
+  
+  // Feature policies
+  bool shouldEnableOfflineMode();
+  bool shouldAutoBackup();
+  int getMaxFileUploadSize();
 }
 
-class MaterialUIPolicy implements UIPolicy {
+class PlatformAppPolicies implements AppPolicies {
   @override
-  bool shouldUseBottomNavigation(double screenWidth) {
-    return screenWidth < 600; // Material Design breakpoint
+  bool shouldAllowExternalPayments() {
+    // Apple App Store Guidelines 3.1.1 prohibit external payment links
+    // Google Play allows them with proper disclosure
+    if (Platform.isIOS) {
+      return false;
+    }
+    return true;
   }
   
   @override
-  bool shouldShowSidebar(double screenWidth) {
-    return screenWidth >= 1200;
+  bool shouldUseNativeNavigation() {
+    // Use platform-specific navigation patterns
+    if (Platform.isIOS) {
+      return true; // Use Cupertino navigation
+    } else if (Platform.isAndroid) {
+      return true; // Use Material navigation
+    } else {
+      return false; // Use custom navigation for web/desktop
+    }
   }
   
   @override
-  int getGridColumns(double screenWidth) {
-    if (screenWidth < 600) return 1;
-    if (screenWidth < 1024) return 2;
-    if (screenWidth < 1440) return 3;
-    return 4;
+  EdgeInsets getDefaultPadding() {
+    // Platform-specific padding conventions
+    if (Platform.isIOS) {
+      return EdgeInsets.symmetric(horizontal: 16, vertical: 8);
+    } else if (Platform.isAndroid) {
+      return EdgeInsets.all(16);
+    } else {
+      // Desktop/Web needs more padding
+      return EdgeInsets.all(24);
+    }
   }
   
   @override
-  double getMaxContentWidth() {
-    return 1200; // Material Design recommendation
-  }
-}
-
-// Navigation Policies  
-abstract class NavigationPolicy {
-  bool shouldUseDrawer(Capabilities capabilities, double screenWidth);
-  bool shouldUseTabBar(int tabCount);
-  bool shouldShowBackButton(bool canPop);
-}
-
-class AdaptiveNavigationPolicy implements NavigationPolicy {
-  @override
-  bool shouldUseDrawer(Capabilities capabilities, double screenWidth) {
-    // Use drawer on mobile, rail on tablet/desktop
-    return screenWidth < 600 && capabilities.input.supportsMultitouch;
+  bool shouldRequestTrackingPermission() {
+    // iOS 14.5+ requires ATT permission
+    // Android doesn't have equivalent requirement
+    if (Platform.isIOS) {
+      return _iosVersion >= 14.5;
+    }
+    return false;
   }
   
   @override
-  bool shouldUseTabBar(int tabCount) {
-    return tabCount <= 5; // Switch to dropdown if more than 5 tabs
-  }
-  
-  @override
-  bool shouldShowBackButton(bool canPop) {
-    return canPop; // Always show if navigation is possible
+  int getMaxFileUploadSize() {
+    // Different limits for different platforms
+    if (Platform.isIOS || Platform.isAndroid) {
+      return 100 * 1024 * 1024; // 100 MB on mobile
+    } else {
+      return 500 * 1024 * 1024; // 500 MB on desktop/web
+    }
   }
 }
 ```
 
-### 4. Unified Capability Service
+## Dependency Injection for Testing
+
+Make your code testable by injecting capabilities and policies:
 
 ```dart
-class Capabilities {
-  final DeviceCapabilities device;
-  final PlatformCapabilities platform;
-  final InputCapabilities input;
+class PhotoUploadScreen extends StatelessWidget {
+  final DeviceCapabilities capabilities;
+  final AppPolicies policies;
   
-  const Capabilities({
-    required this.device,
-    required this.platform, 
-    required this.input,
-  });
+  PhotoUploadScreen({
+    DeviceCapabilities? capabilities,
+    AppPolicies? policies,
+  }) : capabilities = capabilities ?? PlatformDeviceCapabilities(),
+       policies = policies ?? PlatformAppPolicies();
+  
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (capabilities.hasCamera)
+          ElevatedButton(
+            onPressed: _takePhoto,
+            child: Text('Take Photo'),
+          ),
+        ElevatedButton(
+          onPressed: _pickFromGallery,
+          child: Text('Choose from Gallery'),
+        ),
+        Text('Max file size: ${_formatBytes(policies.getMaxFileUploadSize())}'),
+      ],
+    );
+  }
 }
 
-class Policies {
-  final UIPolicy ui;
-  final NavigationPolicy navigation;
+// Testing becomes easy
+testWidgets('Shows camera button when camera available', (tester) async {
+  final mockCapabilities = MockDeviceCapabilities();
+  when(mockCapabilities.hasCamera).thenReturn(true);
   
-  const Policies({
-    required this.ui,
-    required this.navigation,
-  });
-}
+  await tester.pumpWidget(
+    MaterialApp(
+      home: PhotoUploadScreen(capabilities: mockCapabilities),
+    ),
+  );
+  
+  expect(find.text('Take Photo'), findsOneWidget);
+});
+```
 
-// Service locator or dependency injection
-class AdaptiveService {
-  static Capabilities? _capabilities;
-  static Policies? _policies;
+## Platform-Specific Features
+
+### Feature Detection Pattern
+
+```dart
+class FeatureManager {
+  // Don't check platform, check for feature availability
+  Future<bool> canUseFeature(String feature) async {
+    switch (feature) {
+      case 'biometric_auth':
+        return await _checkBiometricAvailability();
+      case 'push_notifications':
+        return await _checkPushNotificationSupport();
+      case 'ar_core':
+        return await _checkARSupport();
+      default:
+        return false;
+    }
+  }
   
-  static Capabilities get capabilities => _capabilities!;
-  static Policies get policies => _policies!;
-  
-  static void initialize({
-    required Capabilities capabilities,
-    required Policies policies,
-  }) {
-    _capabilities = capabilities;
-    _policies = policies;
+  Future<bool> _checkBiometricAvailability() async {
+    try {
+      final LocalAuthentication auth = LocalAuthentication();
+      final bool canCheckBiometrics = await auth.canCheckBiometrics;
+      final bool isDeviceSupported = await auth.isDeviceSupported();
+      return canCheckBiometrics && isDeviceSupported;
+    } catch (e) {
+      return false;
+    }
   }
 }
 ```
 
-## Usage Examples
-
-### 1. Adaptive Layout Based on Capabilities
+### Runtime vs Compile-Time Checks
 
 ```dart
-Widget buildAdaptiveLayout(BuildContext context) {
-  final screenWidth = MediaQuery.sizeOf(context).width;
-  final capabilities = AdaptiveService.capabilities;
-  final policies = AdaptiveService.policies;
+class AdaptiveImplementation {
+  // Compile-time platform check (tree-shaken on other platforms)
+  Widget buildPlatformWidget() {
+    if (kIsWeb) {
+      return WebImplementation();
+    } else if (Platform.isIOS || Platform.isAndroid) {
+      return MobileImplementation();
+    } else {
+      return DesktopImplementation();
+    }
+  }
   
-  // Use policy to determine navigation type
-  if (policies.ui.shouldUseBottomNavigation(screenWidth)) {
-    return Scaffold(
-      body: _buildContent(),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  } else if (policies.ui.shouldShowSidebar(screenWidth)) {
-    return Scaffold(
-      body: Row(
-        children: [
-          _buildSidebar(),
-          Expanded(child: _buildContent()),
-        ],
-      ),
-    );
-  } else {
-    return Scaffold(
-      body: _buildContent(),
-      drawer: policies.navigation.shouldUseDrawer(capabilities, screenWidth)
-        ? _buildDrawer()
-        : null,
-    );
+  // Runtime capability check
+  Future<void> shareContent(String content) async {
+    if (await canShare()) {
+      await Share.share(content);
+    } else {
+      // Fallback: Copy to clipboard
+      await Clipboard.setData(ClipboardData(text: content));
+      showSnackBar('Copied to clipboard');
+    }
+  }
+  
+  Future<bool> canShare() async {
+    // Check if share capability is available
+    try {
+      // This might fail on some platforms
+      return await Share.shareAvailable();
+    } catch (e) {
+      return false;
+    }
   }
 }
 ```
 
-### 2. Input-Aware Interactions
+## Store Policy Implementation
+
+Handle app store requirements elegantly:
 
 ```dart
-Widget buildInteractiveWidget(BuildContext context) {
-  final inputCapabilities = AdaptiveService.capabilities.input;
+class StorePolicy {
+  final TargetPlatform platform;
   
-  Widget widget = MyBaseWidget();
+  StorePolicy(this.platform);
   
-  // Add mouse support if available
-  if (inputCapabilities.hasMouse) {
-    widget = MouseRegion(
-      onEnter: (_) => _handleMouseEnter(),
-      onExit: (_) => _handleMouseExit(),
-      child: widget,
-    );
+  bool mustUseInAppPurchase() {
+    // Apple requires IAP for digital goods
+    return platform == TargetPlatform.iOS;
   }
   
-  // Add keyboard support if available
-  if (inputCapabilities.hasPhysicalKeyboard) {
-    widget = Focus(
-      onPressed: _handleKeyboardFocus,
-      child: widget,
-    );
+  bool canLinkToExternalSubscription() {
+    // Apple prohibits external subscription links
+    // Google allows with proper disclosure
+    return platform != TargetPlatform.iOS;
   }
   
-  return widget;
+  bool requiresAgeGating() {
+    // COPPA compliance for US
+    // Different requirements in different regions
+    return true; // Simplified - would check region
+  }
+  
+  String getPrivacyPolicyUrl() {
+    // Platform-specific privacy policy URLs
+    switch (platform) {
+      case TargetPlatform.iOS:
+        return 'https://example.com/privacy/ios';
+      case TargetPlatform.android:
+        return 'https://example.com/privacy/android';
+      default:
+        return 'https://example.com/privacy';
+    }
+  }
 }
 ```
 
-### 3. Feature-Based Functionality
+## Design System Policies
+
+Platform-specific design decisions:
 
 ```dart
-class PhotoService {
-  Future<void> takePhoto() async {
-    final deviceCapabilities = AdaptiveService.capabilities.device;
-    
-    if (!deviceCapabilities.hasCamera) {
-      throw UnsupportedError('Camera not available');
+class DesignPolicy {
+  final BuildContext context;
+  
+  DesignPolicy(this.context);
+  
+  bool shouldUseCupertinoDesign() {
+    // Respect platform conventions
+    final platform = Theme.of(context).platform;
+    return platform == TargetPlatform.iOS || 
+           platform == TargetPlatform.macOS;
+  }
+  
+  Duration getAnimationDuration() {
+    // Respect accessibility settings
+    final mediaQuery = MediaQuery.of(context);
+    if (mediaQuery.disableAnimations) {
+      return Duration.zero;
     }
     
-    // Implement photo capture
+    // Platform-specific animation speeds
+    if (shouldUseCupertinoDesign()) {
+      return Duration(milliseconds: 250); // iOS standard
+    } else {
+      return Duration(milliseconds: 200); // Material standard
+    }
   }
   
-  Future<void> sharePhoto(String photoPath) async {
-    final platformCapabilities = AdaptiveService.capabilities.platform;
-    
-    if (platformCapabilities.supportsFileSystem) {
-      // Share via file system
+  double getElevation() {
+    // iOS doesn't use elevation/shadows the same way
+    if (shouldUseCupertinoDesign()) {
+      return 0;
     } else {
-      // Share via platform channels or alternative method
+      return 4; // Material elevation
     }
   }
 }
@@ -324,71 +420,45 @@ class PhotoService {
 
 ## Testing Strategies
 
-### 1. Mock Capabilities for Testing
+### Mock Implementations
 
 ```dart
-class MockCapabilities implements Capabilities {
-  @override
-  final DeviceCapabilities device;
-  @override  
-  final PlatformCapabilities platform;
-  @override
-  final InputCapabilities input;
-  
-  const MockCapabilities({
-    required this.device,
-    required this.platform,
-    required this.input,
-  });
-}
-
 class MockDeviceCapabilities implements DeviceCapabilities {
-  @override
-  final bool hasCamera;
-  @override
-  final bool hasGPS;
-  @override
-  final bool hasBiometric;
-  @override
-  final bool supportsNFC;
-  @override
-  final bool hasVibration;
+  final bool _hasCamera;
+  final bool _hasGPS;
   
-  const MockDeviceCapabilities({
-    this.hasCamera = false,
-    this.hasGPS = false,
-    this.hasBiometric = false,
-    this.supportsNFC = false,
-    this.hasVibration = false,
-  });
+  MockDeviceCapabilities({
+    bool hasCamera = true,
+    bool hasGPS = true,
+  }) : _hasCamera = hasCamera,
+       _hasGPS = hasGPS;
+  
+  @override
+  bool get hasCamera => _hasCamera;
+  
+  @override
+  bool get hasGPS => _hasGPS;
 }
 
-// Test example
-testWidgets('should adapt to capabilities', (WidgetTester tester) async {
-  AdaptiveService.initialize(
-    capabilities: MockCapabilities(
-      device: MockDeviceCapabilities(hasCamera: true),
-      platform: MockPlatformCapabilities(),
-      input: MockInputCapabilities(hasMouse: true),
-    ),
-    policies: MaterialPolicies(),
-  );
+class MockAppPolicies implements AppPolicies {
+  final bool _allowExternalPayments;
   
-  await tester.pumpWidget(MyAdaptiveWidget());
+  MockAppPolicies({
+    bool allowExternalPayments = true,
+  }) : _allowExternalPayments = allowExternalPayments;
   
-  // Verify widget adapts correctly
-});
+  @override
+  bool shouldAllowExternalPayments() => _allowExternalPayments;
+}
 ```
 
 ## Best Practices
 
-1. **Avoid using `Platform.isX` for layout decisions** - use capability-based detection
-2. **Create methods that describe why code branches**, not just where
-3. **Use compile-time, runtime, or RPC-backed implementations** as appropriate
-4. **Test by mocking capabilities and policies** for different scenarios
-5. **Design apps to leverage each platform's unique strengths**
-6. **Keep capability detection separate from business logic**
-7. **Use dependency injection** to manage capability and policy instances
-8. **Document capability assumptions** and fallback behaviors
-9. **Create comprehensive capability coverage** for your app's needs
-10. **Update capabilities** as platform features evolve
+1. **Abstract platform checks**: Create methods that describe intent, not platform
+2. **Document why**: Always document why behavior differs between platforms
+3. **Use dependency injection**: Make code testable by injecting capabilities/policies
+4. **Check features, not platforms**: Detect capability availability rather than platform type
+5. **Centralize policies**: Keep all policy decisions in dedicated classes
+6. **Version defensively**: Account for OS version differences
+7. **Fail gracefully**: Always provide fallbacks for missing capabilities
+8. **Keep policies updatable**: Store policies that might change in remote config

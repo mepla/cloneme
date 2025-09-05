@@ -1,150 +1,131 @@
-# Best Practices for Adaptive Flutter Apps
+# Best Practices for Adaptive Apps
 
-## Design Considerations
+A comprehensive guide to best practices for building adaptive Flutter applications that work seamlessly across all platforms and device types.
 
-### 1. Break Down Complex Widgets
-Create smaller, simpler components that are easier to adapt and maintain:
+## Design Principles
+
+### 1. Break Down Widgets
+
+Create smaller, more focused widgets for better performance and maintainability:
 
 ```dart
-// Instead of one monolithic widget
-class ComplexDashboard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // 200+ lines of complex layout code
-  }
-}
-
-// Break into smaller, focused components
-class AdaptiveDashboard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    
-    return screenWidth > 1200 
-      ? DesktopDashboardLayout()
-      : screenWidth > 600 
-        ? TabletDashboardLayout()
-        : MobileDashboardLayout();
-  }
-}
-
-class MobileDashboardLayout extends StatelessWidget {
+// ❌ Bad: Monolithic widget
+class UserProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        DashboardHeader(),
-        Expanded(child: DashboardContent()),
-        DashboardActions(),
+        // Header, avatar, stats, posts, etc. all in one widget
+        // 500+ lines of code
       ],
     );
   }
 }
-```
 
-### 2. "Solve Touch First" Philosophy
-Focus on touch-oriented UI design as the foundation:
-
-```dart
-// Start with touch-friendly design
-class TouchFirstButton extends StatelessWidget {
+// ✅ Good: Composed of smaller widgets
+class UserProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48, // Minimum touch target size
-      child: ElevatedButton(
-        onPressed: onPressed,
-        child: Text(label),
+    return Column(
+      children: [
+        ProfileHeader(),
+        ProfileAvatar(),
+        ProfileStats(),
+        ProfilePosts(),
+      ],
+    );
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Focused implementation
+  }
+}
+```
+
+Benefits of smaller widgets:
+- Improved performance (const constructors, better rebuilds)
+- Better code readability and maintainability
+- Easier testing
+- Reusable components
+- More flexible layouts for different screen sizes
+
+### 2. Design to Platform Strengths
+
+Leverage unique capabilities of each platform:
+
+```dart
+class PlatformOptimizedFeatures extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    
+    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
+      // Use iOS/macOS specific features
+      return CupertinoFeatures();
+    } else if (platform == TargetPlatform.android) {
+      // Use Android specific features
+      return MaterialFeatures();
+    } else if (kIsWeb) {
+      // Optimize for web
+      return WebOptimizedFeatures();
+    } else {
+      // Desktop optimizations
+      return DesktopFeatures();
+    }
+  }
+}
+```
+
+Platform-specific strengths:
+- **Mobile**: Touch gestures, camera, GPS, accelerometer
+- **Tablet**: Larger canvas, stylus support, split-screen
+- **Desktop**: Keyboard shortcuts, multi-window, file system access
+- **Web**: URLs, SEO, browser features, responsive viewport
+
+### 3. Solve Touch First
+
+Design for touch interaction first, then enhance for other inputs:
+
+```dart
+class TouchFirstButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+  
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      // Touch-friendly tap target (minimum 48x48)
+      onTap: onPressed,
+      child: Container(
+        constraints: BoxConstraints(minHeight: 48, minWidth: 48),
+        child: MouseRegion(
+          // Enhanced for mouse users
+          cursor: SystemMouseCursors.click,
+          child: Shortcuts(
+            // Keyboard support
+            shortcuts: {
+              LogicalKeySet(LogicalKeyboardKey.enter): ActivateIntent(),
+            },
+            child: child,
+          ),
+        ),
       ),
     );
   }
 }
-
-// Then enhance for other input methods
-class AdaptiveButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final hasTouch = MediaQuery.of(context).size.shortestSide < 600;
-    
-    Widget button = ElevatedButton(
-      onPressed: onPressed,
-      child: Text(label),
-    );
-    
-    // Add mouse enhancements for non-touch devices
-    if (!hasTouch) {
-      button = MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Focus(
-          onPressed: onPressed,
-          child: button,
-        ),
-      );
-    }
-    
-    return SizedBox(
-      height: hasTouch ? 48 : 36, // Smaller for mouse/keyboard
-      child: button,
-    );
-  }
-}
 ```
 
-### 3. Leverage Unique Strengths of Form Factors
-Design to take advantage of each platform's capabilities:
+## Layout Best Practices
+
+### 1. Avoid Orientation Locking
+
+Support all orientations for better accessibility:
 
 ```dart
-class AdaptiveMediaViewer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final isLargeScreen = screenSize.width > 1024;
-    final isMobile = screenSize.width < 600;
-    
-    if (isMobile) {
-      // Mobile: Full-screen immersive experience
-      return PageView.builder(
-        itemBuilder: (context, index) => FullScreenMediaView(media[index]),
-        itemCount: media.length,
-      );
-    } else if (isLargeScreen) {
-      // Desktop: Multi-pane with sidebar
-      return Row(
-        children: [
-          SizedBox(
-            width: 300,
-            child: MediaThumbnailList(
-              media: media,
-              onSelected: setSelectedMedia,
-            ),
-          ),
-          VerticalDivider(),
-          Expanded(
-            child: DetailedMediaView(selectedMedia),
-          ),
-        ],
-      );
-    } else {
-      // Tablet: Adaptive grid
-      return GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-        ),
-        itemBuilder: (context, index) => MediaCard(media[index]),
-        itemCount: media.length,
-      );
-    }
-  }
-}
-```
-
-## Implementation Best Practices
-
-### 1. Never Lock App Orientation
-Allow the system to handle orientation changes naturally:
-
-```dart
-// DON'T do this
+// ❌ Bad: Locking orientation
 void main() {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -152,44 +133,40 @@ void main() {
   runApp(MyApp());
 }
 
-// DO support all orientations
+// ✅ Good: Supporting all orientations
 void main() {
+  // Don't lock orientation, or support all
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
   runApp(MyApp());
-}
-
-// Handle orientation changes in your layouts
-class OrientationAwareLayout extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final orientation = MediaQuery.orientationOf(context);
-    
-    return orientation == Orientation.portrait
-      ? PortraitLayout()
-      : LandscapeLayout();
-  }
 }
 ```
 
-### 2. Don't Use Device Type for Layout Decisions
-Use actual measurements instead of platform detection:
+### 2. Avoid Orientation-Based Layouts
+
+Don't use orientation to determine layout; use available space:
 
 ```dart
-// DON'T base layout on platform
+// ❌ Bad: Using orientation for layout
 Widget build(BuildContext context) {
-  if (Platform.isIOS || Platform.isAndroid) {
+  final orientation = MediaQuery.of(context).orientation;
+  if (orientation == Orientation.portrait) {
     return MobileLayout();
   } else {
-    return DesktopLayout();
+    return TabletLayout();
   }
 }
 
-// DO base layout on actual screen size
+// ✅ Good: Using available width
 Widget build(BuildContext context) {
-  final screenWidth = MediaQuery.sizeOf(context).width;
-  
-  if (screenWidth < 600) {
+  final width = MediaQuery.sizeOf(context).width;
+  if (width < 600) {
     return CompactLayout();
-  } else if (screenWidth < 1200) {
+  } else if (width < 1200) {
     return MediumLayout();
   } else {
     return ExpandedLayout();
@@ -197,37 +174,161 @@ Widget build(BuildContext context) {
 }
 ```
 
-### 3. Support Variety of Input Devices
-Design for multiple interaction methods:
+### 3. Constrain Content Width
+
+Don't stretch content across entire screen on large displays:
 
 ```dart
-class AdaptiveListItem extends StatefulWidget {
-  @override
-  State<AdaptiveListItem> createState() => _AdaptiveListItemState();
-}
-
-class _AdaptiveListItemState extends State<AdaptiveListItem> {
-  bool _isHovered = false;
-  bool _isFocused = false;
+class ReadableContent extends StatelessWidget {
+  final Widget child;
   
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: Focus(
-        onPressed: widget.onTap,
-        onFocusChange: (focused) => setState(() => _isFocused = focused),
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: 150),
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: 800, // Optimal reading width
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: child,
+      ),
+    );
+  }
+}
+```
+
+### 4. Use Adaptive Breakpoints
+
+Material Design recommended breakpoints:
+
+```dart
+class ResponsiveBreakpoints {
+  static const double mobileBreakpoint = 600;
+  static const double tabletBreakpoint = 840;
+  static const double desktopBreakpoint = 1200;
+  static const double largeBreakpoint = 1600;
+  
+  static bool isMobile(BuildContext context) => 
+    MediaQuery.sizeOf(context).width < mobileBreakpoint;
+    
+  static bool isTablet(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return width >= mobileBreakpoint && width < desktopBreakpoint;
+  }
+  
+  static bool isDesktop(BuildContext context) => 
+    MediaQuery.sizeOf(context).width >= desktopBreakpoint;
+}
+```
+
+## Navigation Patterns
+
+### Adaptive Navigation
+
+Switch navigation patterns based on screen size:
+
+```dart
+class AdaptiveScaffold extends StatelessWidget {
+  final List<NavigationDestination> destinations;
+  final int selectedIndex;
+  final Widget body;
+  
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    
+    // Mobile: Bottom navigation
+    if (width < 600) {
+      return Scaffold(
+        body: body,
+        bottomNavigationBar: NavigationBar(
+          destinations: destinations,
+          selectedIndex: selectedIndex,
+        ),
+      );
+    }
+    
+    // Tablet: Navigation rail
+    if (width < 1200) {
+      return Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              destinations: _toRailDestinations(destinations),
+              selectedIndex: selectedIndex,
+              labelType: NavigationRailLabelType.all,
+            ),
+            VerticalDivider(width: 1),
+            Expanded(child: body),
+          ],
+        ),
+      );
+    }
+    
+    // Desktop: Extended navigation rail
+    return Scaffold(
+      body: Row(
+        children: [
+          NavigationRail(
+            extended: true,
+            destinations: _toRailDestinations(destinations),
+            selectedIndex: selectedIndex,
+          ),
+          VerticalDivider(width: 1),
+          Expanded(child: body),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## Input Device Support
+
+### Multi-Input Support
+
+Support all input methods without compromising any:
+
+```dart
+class UniversalInteractiveWidget extends StatefulWidget {
+  @override
+  State<UniversalInteractiveWidget> createState() => 
+    _UniversalInteractiveWidgetState();
+}
+
+class _UniversalInteractiveWidgetState 
+    extends State<UniversalInteractiveWidget> {
+  bool _isHovered = false;
+  bool _isFocused = false;
+  bool _isPressed = false;
+  
+  @override
+  Widget build(BuildContext context) {
+    return FocusableActionDetector(
+      onShowHoverHighlight: (hover) => setState(() => _isHovered = hover),
+      onShowFocusHighlight: (focus) => setState(() => _isFocused = focus),
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.space): ActivateIntent(),
+        LogicalKeySet(LogicalKeyboardKey.enter): ActivateIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) => _handleActivation(),
+        ),
+      },
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        onTap: _handleActivation,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Container(
             decoration: BoxDecoration(
               color: _getBackgroundColor(),
-              borderRadius: BorderRadius.circular(8),
+              border: _getBorder(),
             ),
-            padding: EdgeInsets.all(16),
-            child: widget.child,
+            child: Content(),
           ),
         ),
       ),
@@ -235,298 +336,253 @@ class _AdaptiveListItemState extends State<AdaptiveListItem> {
   }
   
   Color _getBackgroundColor() {
-    if (_isFocused) return Colors.blue.shade100;
-    if (_isHovered) return Colors.grey.shade100;
-    return Colors.transparent;
-  }
-}
-```
-
-### 4. Use MediaQuery for Understanding Screen Context
-Get comprehensive screen information:
-
-```dart
-class ResponsiveContainer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    final textScaleFactor = MediaQuery.textScaleFactorOf(context);
-    final orientation = MediaQuery.orientationOf(context);
-    
-    // Calculate effective screen size
-    final effectiveWidth = screenSize.width / devicePixelRatio;
-    final effectiveHeight = screenSize.height / devicePixelRatio;
-    
-    // Adapt to text scaling
-    final baseFontSize = 16.0;
-    final adaptedFontSize = baseFontSize * math.min(textScaleFactor, 1.5);
-    
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: _getMaxWidth(effectiveWidth),
-      ),
-      child: Text(
-        'Responsive Text',
-        style: TextStyle(fontSize: adaptedFontSize),
-      ),
-    );
+    if (_isPressed) return Colors.blue[700]!;
+    if (_isHovered) return Colors.blue[100]!;
+    return Colors.white;
   }
   
-  double _getMaxWidth(double screenWidth) {
-    if (screenWidth < 600) return screenWidth - 32; // Mobile padding
-    if (screenWidth < 1200) return 800; // Tablet max width
-    return 1000; // Desktop max width
+  Border? _getBorder() {
+    if (_isFocused) {
+      return Border.all(color: Colors.blue, width: 2);
+    }
+    return Border.all(color: Colors.grey);
+  }
+  
+  void _handleActivation() {
+    // Handle activation
   }
 }
 ```
 
-### 5. Restore List State Using PageStorageKey
-Maintain scroll position across navigation:
+## State Management
+
+### Preserve State During Configuration Changes
+
+Use PageStorageKey to maintain scroll position and other state:
 
 ```dart
-class StatefulScrollView extends StatelessWidget {
+class StatefulList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      key: PageStorageKey('my_list_view'),
-      itemCount: items.length,
+      key: PageStorageKey('main_list'),
       itemBuilder: (context, index) {
         return ListTile(
-          title: Text(items[index].title),
-          onTap: () => _navigateToDetail(context, items[index]),
+          title: Text('Item $index'),
         );
       },
     );
   }
-  
-  void _navigateToDetail(BuildContext context, Item item) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => DetailPage(item: item)),
-    );
-    // List position will be restored when returning
-  }
 }
 ```
 
-## Layout and Navigation Patterns
-
-### 1. Adaptive Navigation Pattern
-Implement different navigation styles based on screen size:
+### Responsive State Management
 
 ```dart
-class AdaptiveScaffold extends StatelessWidget {
+class ResponsiveStateManager extends ChangeNotifier {
+  late Size _screenSize;
+  late ScreenType _screenType;
+  
+  void updateScreenSize(Size size) {
+    _screenSize = size;
+    _screenType = _calculateScreenType(size);
+    notifyListeners();
+  }
+  
+  ScreenType _calculateScreenType(Size size) {
+    if (size.width < 600) return ScreenType.mobile;
+    if (size.width < 1200) return ScreenType.tablet;
+    return ScreenType.desktop;
+  }
+  
+  bool get showNavigationRail => _screenType != ScreenType.mobile;
+  bool get showExtendedRail => _screenType == ScreenType.desktop;
+  int get gridColumns => _screenType == ScreenType.mobile ? 2 : 4;
+}
+```
+
+## Performance Optimization
+
+### Conditional Widget Building
+
+Build only what's needed for the current screen:
+
+```dart
+class OptimizedResponsiveWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    
-    if (screenWidth < 600) {
-      return _buildMobileLayout();
-    } else if (screenWidth < 1200) {
-      return _buildTabletLayout(); 
-    } else {
-      return _buildDesktopLayout();
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Build only the appropriate layout
+        if (constraints.maxWidth < 600) {
+          return _buildMobileLayout();
+        } else if (constraints.maxWidth < 1200) {
+          return _buildTabletLayout();
+        } else {
+          return _buildDesktopLayout();
+        }
+      },
+    );
   }
   
   Widget _buildMobileLayout() {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: body,
-      bottomNavigationBar: NavigationBar(
-        destinations: destinations,
-        selectedIndex: selectedIndex,
-        onDestinationSelected: onDestinationSelected,
-      ),
-    );
+    // Mobile-specific widgets only
+    return MobileOptimizedView();
   }
   
   Widget _buildTabletLayout() {
-    return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            destinations: destinations.map((dest) => NavigationRailDestination(
-              icon: dest.icon,
-              label: Text(dest.label),
-            )).toList(),
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
-          ),
-          VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: Column(
-              children: [
-                AppBar(title: Text(title), automaticallyImplyLeading: false),
-                Expanded(child: body),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    // Tablet-specific widgets only
+    return TabletOptimizedView();
   }
   
   Widget _buildDesktopLayout() {
-    return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            extended: true,
-            destinations: destinations.map((dest) => NavigationRailDestination(
-              icon: dest.icon,
-              label: Text(dest.label),
-            )).toList(),
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
-          ),
-          VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: Column(
-              children: [
-                AppBar(title: Text(title), automaticallyImplyLeading: false),
-                Expanded(child: body),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    // Desktop-specific widgets only
+    return DesktopOptimizedView();
   }
 }
 ```
 
-### 2. Content Adaptation Patterns
-Adjust content presentation for different screen sizes:
+## Accessibility
+
+### Always Include Semantics
 
 ```dart
-class AdaptiveContentLayout extends StatelessWidget {
+class AccessibleButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: _getMaxContentWidth(screenWidth),
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: _getHorizontalPadding(screenWidth),
-          ),
-          child: content,
+    return Semantics(
+      button: true,
+      label: label,
+      hint: 'Double tap to activate',
+      child: InkWell(
+        onTap: onPressed,
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Text(label),
         ),
       ),
     );
   }
+}
+```
+
+### Support Keyboard Navigation
+
+```dart
+class KeyboardNavigableList extends StatefulWidget {
+  final List<String> items;
   
-  double _getMaxContentWidth(double screenWidth) {
-    if (screenWidth < 600) return screenWidth;
-    if (screenWidth < 1200) return 800;
-    return 1000;
-  }
+  @override
+  State<KeyboardNavigableList> createState() => 
+    _KeyboardNavigableListState();
+}
+
+class _KeyboardNavigableListState extends State<KeyboardNavigableList> {
+  int _selectedIndex = 0;
+  final FocusNode _focusNode = FocusNode();
   
-  double _getHorizontalPadding(double screenWidth) {
-    if (screenWidth < 600) return 16;
-    if (screenWidth < 1200) return 24;
-    return 32;
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardListener(
+      focusNode: _focusNode,
+      onKeyEvent: (event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            setState(() {
+              _selectedIndex = (_selectedIndex + 1) % widget.items.length;
+            });
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            setState(() {
+              _selectedIndex = (_selectedIndex - 1) % widget.items.length;
+            });
+          }
+        }
+      },
+      child: ListView.builder(
+        itemCount: widget.items.length,
+        itemBuilder: (context, index) {
+          return Container(
+            color: _selectedIndex == index ? Colors.blue[100] : null,
+            child: ListTile(
+              title: Text(widget.items[index]),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 ```
 
-## Testing and Debugging
+## Testing Strategies
 
-### 1. Test Across Multiple Screen Sizes
-Use Flutter's device preview tools:
+### Test on Multiple Screen Sizes
 
 ```dart
 void main() {
-  runApp(
-    DevicePreview(
-      enabled: kDebugMode,
-      builder: (context) => MyApp(),
-    ),
-  );
-}
-```
-
-### 2. Debug Layout Issues
-Use Flutter Inspector and debug tools:
-
-```dart
-class DebuggableLayout extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: kDebugMode ? BoxDecoration(
-        border: Border.all(color: Colors.red, width: 1),
-      ) : null,
-      child: Column(
-        children: [
-          if (kDebugMode) 
-            Text('Debug: ${MediaQuery.sizeOf(context)}'),
-          Expanded(child: actualContent),
-        ],
-      ),
-    );
-  }
-}
-```
-
-## Performance Considerations
-
-### 1. Lazy Load Adaptive Components
-Only build what's needed for the current layout:
-
-```dart
-class LazyAdaptiveView extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
+  group('Responsive Layout Tests', () {
+    testWidgets('Shows mobile layout on small screens', (tester) async {
+      tester.view.physicalSize = Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      
+      await tester.pumpWidget(MaterialApp(home: ResponsiveApp()));
+      
+      expect(find.byType(MobileLayout), findsOneWidget);
+      expect(find.byType(TabletLayout), findsNothing);
+    });
     
-    // Don't build unused layouts
-    if (screenWidth < 600) {
-      return MobileView();
-    } else if (screenWidth < 1200) {
-      return TabletView();
-    } else {
-      return DesktopView();
-    }
-  }
+    testWidgets('Shows tablet layout on medium screens', (tester) async {
+      tester.view.physicalSize = Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      
+      await tester.pumpWidget(MaterialApp(home: ResponsiveApp()));
+      
+      expect(find.byType(TabletLayout), findsOneWidget);
+      expect(find.byType(MobileLayout), findsNothing);
+    });
+  });
 }
 ```
 
-### 2. Cache Expensive Calculations
-Store screen-dependent calculations:
+## Summary Checklist
 
-```dart
-class OptimizedAdaptiveWidget extends StatefulWidget {
-  @override
-  State<OptimizedAdaptiveWidget> createState() => _OptimizedAdaptiveWidgetState();
-}
+✅ **Design Principles**
+- [ ] Break down large widgets into smaller components
+- [ ] Design to platform strengths
+- [ ] Solve for touch first, enhance for other inputs
 
-class _OptimizedAdaptiveWidgetState extends State<OptimizedAdaptiveWidget> {
-  Size? _lastScreenSize;
-  Widget? _cachedLayout;
-  
-  @override
-  Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    
-    // Only rebuild if screen size changed significantly
-    if (_lastScreenSize == null || 
-        (screenSize.width - _lastScreenSize!.width).abs() > 50) {
-      _lastScreenSize = screenSize;
-      _cachedLayout = _buildAdaptiveLayout(screenSize);
-    }
-    
-    return _cachedLayout!;
-  }
-  
-  Widget _buildAdaptiveLayout(Size screenSize) {
-    // Expensive layout calculations here
-    return Container();
-  }
-}
-```
+✅ **Layout**
+- [ ] Support all orientations
+- [ ] Use screen size, not orientation for layout decisions
+- [ ] Constrain content width on large screens
+- [ ] Use Material Design breakpoints
+
+✅ **Navigation**
+- [ ] Adapt navigation pattern to screen size
+- [ ] Support keyboard navigation
+- [ ] Provide multiple ways to navigate
+
+✅ **Input**
+- [ ] Support touch, mouse, keyboard, and stylus
+- [ ] Provide appropriate visual feedback
+- [ ] Meet minimum touch target sizes (48x48)
+
+✅ **State**
+- [ ] Preserve state during configuration changes
+- [ ] Use PageStorageKey for scroll positions
+- [ ] Handle orientation changes gracefully
+
+✅ **Accessibility**
+- [ ] Include semantic information
+- [ ] Support screen readers
+- [ ] Ensure keyboard navigation
+- [ ] Respect system accessibility settings
+
+✅ **Testing**
+- [ ] Test on multiple screen sizes
+- [ ] Test with different input methods
+- [ ] Test accessibility features
+- [ ] Test on actual devices when possible
