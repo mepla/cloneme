@@ -1,42 +1,58 @@
 {
-  "name": "YouTube Creator Finder with Contact Info",
+  "name": "Youtube scrape creators",
   "nodes": [
     {
       "parameters": {},
-      "id": "f6c8c5b0-8c5a-4c5a-8c5a-8c5a8c5a8c5a",
+      "id": "630cc51d-94e9-4a14-9fcf-e2d93d9cc2e0",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        240,
-        300
+        -2880,
+        -144
       ]
     },
     {
       "parameters": {
-        "url": "=https://www.googleapis.com/youtube/v3/search?part=snippet&q={{ encodeURIComponent($json.searchTopic || 'personal finance') }}&type=video&order=relevance&maxResults=50&key={{ $env.YOUTUBE_API_KEY }}",
-        "options": {}
+        "url": "=https://www.googleapis.com/youtube/v3/search?part=snippet&q={{ encodeURIComponent($json.searchTopic) }}&type=video&order=relevance&maxResults=50&key={{ $env.YOUTUBE_API_KEY }}&pageToken=",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "pageToken",
+                    "value": "={{ $response.body.nextPageToken }}"
+                  }
+                ]
+              },
+              "limitPagesFetched": true,
+              "maxRequests": 5,
+              "requestInterval": 50
+            }
+          }
+        }
       },
-      "id": "a1b2c3d4-e5f6-4789-abcd-ef1234567890",
+      "id": "cedf3408-ccf1-418c-ad5a-cbd4983c4620",
       "name": "YouTube Search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        460,
-        300
+        -2656,
+        -144
       ]
     },
     {
       "parameters": {
         "jsCode": "// Extract unique channel IDs from search results\nconst channelIds = new Set();\n\nfor (const item of items) {\n  if (item.json.items) {\n    for (const video of item.json.items) {\n      if (video.snippet && video.snippet.channelId) {\n        channelIds.add(video.snippet.channelId);\n      }\n    }\n  }\n}\n\n// Return array of channel IDs (max 50 per API call)\nconst channelIdArray = Array.from(channelIds).slice(0, 50);\n\nreturn [{\n  json: {\n    channelIds: channelIdArray,\n    channelIdString: channelIdArray.join(',')\n  }\n}];"
       },
-      "id": "b2c3d4e5-f6g7-4890-bcde-f12345678901",
+      "id": "af41024b-d402-4cf0-a424-5f3c37e5ad66",
       "name": "Extract Channel IDs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        680,
-        300
+        -2432,
+        -144
       ]
     },
     {
@@ -44,55 +60,247 @@
         "url": "=https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id={{ $json.channelIdString }}&key={{ $env.YOUTUBE_API_KEY }}",
         "options": {}
       },
-      "id": "c3d4e5f6-g7h8-4901-cdef-g23456789012",
+      "id": "b46ef400-3bc9-4c66-a7a0-6baee00a6ae6",
       "name": "Get Channel Details",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        900,
-        300
+        -2208,
+        -144
       ]
     },
     {
       "parameters": {
         "jsCode": "// Filter channels based on subscriber range\nconst results = [];\n\n// Get subscriber range from the original trigger input using the correct n8n pattern\nconst triggerData = $node[\"Manual Trigger\"].json;\nconst minSubscribers = triggerData.minSubscribers;\nconst maxSubscribers = triggerData.maxSubscribers;\n\nconsole.log(`Filtering with range: ${minSubscribers.toLocaleString()} - ${maxSubscribers.toLocaleString()}`);\n\nfor (const item of items) {\n  if (item.json.items) {\n    for (const channel of item.json.items) {\n      const subscriberCount = parseInt(channel.statistics.subscriberCount) || 0;\n      \n      if (subscriberCount >= minSubscribers && subscriberCount <= maxSubscribers) {\n        results.push({\n          json: {\n            channelId: channel.id,\n            channelTitle: channel.snippet.title,\n            subscriberCount: subscriberCount,\n            description: channel.snippet.description,\n            customUrl: channel.snippet.customUrl || '',\n            channelUrl: `https://www.youtube.com/channel/${channel.id}`,\n            aboutUrl: `https://www.youtube.com/channel/${channel.id}/about`,\n            thumbnails: channel.snippet.thumbnails\n          }\n        });\n      }\n    }\n  }\n}\n\nconsole.log(`Found ${results.length} channels with ${minSubscribers.toLocaleString()} - ${maxSubscribers.toLocaleString()} subscribers`);\nreturn results;"
       },
-      "id": "d4e5f6g7-h8i9-4012-defg-h34567890123",
+      "id": "7e060dd3-f3fa-4f3d-a704-32de9773a561",
       "name": "Filter Subscriber Range",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1120,
-        300
+        -2000,
+        -144
       ]
     },
     {
       "parameters": {
         "jsCode": "// Final formatting - basic channel information without web scraping\nconst results = [];\nlet totalChannels = 0;\n\nfor (const item of items) {\n  totalChannels++;\n  \n  // Get channel data directly from the filtered results\n  const subscriberCount = item.json.subscriberCount || 0;\n  const channelTitle = item.json.channelTitle || 'Unknown Channel';\n  const channelUrl = item.json.channelUrl || '';\n  const channelId = item.json.channelId || '';\n  const aboutUrl = item.json.aboutUrl || '';\n  const description = item.json.description || '';\n  const customUrl = item.json.customUrl || '';\n  \n  const finalResult = {\n    rank: totalChannels,\n    channelInfo: {\n      title: channelTitle,\n      subscribers: subscriberCount ? subscriberCount.toLocaleString() : '0',\n      subscriberCount: subscriberCount,\n      url: channelUrl,\n      channelId: channelId,\n      aboutUrl: aboutUrl,\n      customUrl: customUrl,\n      description: description.substring(0, 200) + (description.length > 200 ? '...' : '')\n    },\n    contactInfo: {\n      note: 'Contact information scraping disabled - would require more complex data handling',\n      aboutPageUrl: aboutUrl,\n      suggestion: 'Visit the about page manually to find contact information'\n    },\n    searchMetadata: {\n      extractedAt: new Date().toISOString(),\n      scrapingEnabled: false,\n      reason: 'HTTP Request node data handling complexity'\n    }\n  };\n  \n  results.push({ json: finalResult });\n}\n\nconsole.log(`Final results: ${totalChannels} channels formatted`);\nreturn results;"
       },
-      "id": "h8i9j0k1-l2m3-4456-hijk-l78901234567",
+      "id": "2f6f0e91-2c5a-4206-b892-686b44965193",
       "name": "Format Final Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2000,
-        180
+        -1728,
+        -144
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Create summary of the search - without contact extraction\nconst channelCount = items.length;\n\n// Get search parameters from the original trigger using correct n8n pattern\nconst triggerData = $node[\"Manual Trigger\"].json;\nconst searchTopic = triggerData.searchTopic;\nconst minSubs = triggerData.minSubscribers;\nconst maxSubs = triggerData.maxSubscribers;\n\nconst summary = {\n  searchSummary: {\n    searchTopic: searchTopic,\n    subscriberRange: {\n      min: minSubs.toLocaleString(),\n      max: maxSubs.toLocaleString()\n    },\n    timestamp: new Date().toISOString(),\n    channelsFound: channelCount,\n    contactExtractionEnabled: false,\n    note: 'Contact information extraction requires additional workflow complexity'\n  },\n  topChannels: items.slice(0, 10).map((item, index) => ({\n    rank: index + 1,\n    title: item.json.channelTitle || 'Unknown Channel',\n    subscribers: (item.json.subscriberCount || 0).toLocaleString(),\n    subscriberCount: item.json.subscriberCount || 0,\n    channelUrl: item.json.channelUrl || '',\n    aboutUrl: item.json.aboutUrl || '',\n    description: (item.json.description || '').substring(0, 200) + ((item.json.description || '').length > 200 ? '...' : '')\n  })),\n  instructions: {\n    contactExtraction: 'To get contact information, visit the aboutUrl for each channel manually',\n    automation: 'For automated contact extraction, consider using external scraping tools or services'\n  }\n};\n\nreturn [{ json: summary }];"
+        "jsCode": "// Prepare data for Google Sheets format\nconst results = [];\n\nfor (const item of items) {\n  const channelInfo = item.json.channelInfo;\n  \n  // Format data for Google Sheets with all relevant fields\n  const sheetRow = {\n    Channel_ID: channelInfo.channelId,\n    Channel_Title: channelInfo.title,\n    Subscriber_Count: channelInfo.subscriberCount,\n    Subscribers_Formatted: channelInfo.subscribers,\n    Channel_URL: channelInfo.url,\n    About_URL: channelInfo.aboutUrl,\n    Custom_URL: channelInfo.customUrl,\n    Description: channelInfo.description,\n    Extracted_At: item.json.searchMetadata.extractedAt,\n    Search_criteria: $(\"Manual Trigger\").first().json,\n    Search_topic: $(\"Manual Trigger\").first().json.searchTopic\n  };\n  \n  results.push({ json: sheetRow });\n}\n\nreturn results;"
       },
-      "id": "i9j0k1l2-m3n4-4567-ijkl-m89012345678",
-      "name": "Create Search Summary",
+      "id": "prepare-sheets-data-123",
+      "name": "Prepare Sheets Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2000,
-        420
+        -1488,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1uBdl24cud_OeSYCve1hInl3p6FyWmWBJcNM19eBgztc",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Youtubers",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "read-existing-sheets-123",
+      "name": "Read Existing Google Sheets Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1248,
+        -144
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6PHk4YdWpfmUviHp",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1uBdl24cud_OeSYCve1hInl3p6FyWmWBJcNM19eBgztc",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Youtubers",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Channel_ID",
+              "displayName": "Channel_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Channel_Title",
+              "displayName": "Channel_Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subscriber_Count",
+              "displayName": "Subscriber_Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subscribers_Formatted",
+              "displayName": "Subscribers_Formatted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Channel_URL",
+              "displayName": "Channel_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "About_URL",
+              "displayName": "About_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Custom_URL",
+              "displayName": "Custom_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Extracted_At",
+              "displayName": "Extracted_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Rank",
+              "displayName": "Rank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "append-to-sheets-123",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -768,
+        -144
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6PHk4YdWpfmUviHp",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter out duplicates based on Channel ID\n// This node receives two inputs in Run Once for All Items mode:\n// Input 0: new channels from prepare-sheets-data \n// Input 1: existing data from google sheets\n\n// Get new channels from the first input\nconst newChannels = $input.all();\n\n// Get existing data from Google Sheets - use node reference method\nconst existingData = [];\ntry {\n  // In Run Once for All Items mode, access data from specific node\n  const sheetsData = $('Read Existing Google Sheets Data').all();\n  if (sheetsData && Array.isArray(sheetsData)) {\n    existingData.push(...sheetsData);\n  }\n} catch (error) {\n  console.log('No existing data in Google Sheets or error accessing it:');\n}\n\n// Create a set of existing channel IDs\nconst existingChannelIds = new Set();\nfor (const row of existingData) {\n  if (row && row.json && row.json.Channel_ID) {\n    existingChannelIds.add(row.json.Channel_ID);\n  }\n}\n\n// Filter out channels that already exist\nconst uniqueChannels = [];\nfor (const channel of newChannels) {\n  if (channel && channel.json && !existingChannelIds.has(channel.json.Channel_ID)) {\n    uniqueChannels.push(channel);\n  }\n}\n\nconsole.log(`Found ${newChannels.length} new channels, ${existingChannelIds.size} existing channels`);\nconsole.log(`Adding ${uniqueChannels.length} unique channels`);\n\nreturn uniqueChannels;"
+      },
+      "id": "filter-duplicates-123",
+      "name": "Filter Out Duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        -144
       ]
     }
   ],
+  "pinData": {
+    "Manual Trigger": [
+      {
+        "json": {
+          "searchTopic": "investment",
+          "minSubscribers": 50000,
+          "maxSubscribers": 1000000
+        }
+      }
+    ]
+  },
   "connections": {
     "Manual Trigger": {
       "main": [
@@ -145,9 +353,53 @@
             "node": "Format Final Results",
             "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Final Results": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheets Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheets Data": {
+      "main": [
+        [
+          {
+            "node": "Read Existing Google Sheets Data",
+            "type": "main",
+            "index": 0
           },
           {
-            "node": "Create Search Summary",
+            "node": "Filter Out Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Existing Google Sheets Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Out Duplicates",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Filter Out Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
             "type": "main",
             "index": 0
           }
@@ -155,23 +407,15 @@
       ]
     }
   },
-  "pinData": {
-    "Manual Trigger": [
-      {
-        "json": {
-          "searchTopic": "personal finance",
-          "minSubscribers": 50000,
-          "maxSubscribers": 1000000
-        }
-      }
-    ]
-  },
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "staticData": null,
-  "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2025-01-02T00:00:00.000Z",
-  "versionId": "1"
+  "versionId": "e6b6cfaf-9bce-4541-8194-4b35b9a89ce9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2f41630f3c5201bb3908b7ee06942ad1470a82eea7a2c1aa5483a8f5ed8525f7"
+  },
+  "id": "ojGUWsEKgZdClowz",
+  "tags": []
 }
