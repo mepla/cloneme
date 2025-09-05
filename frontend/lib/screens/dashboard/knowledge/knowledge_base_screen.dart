@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../services/mock/mock_knowledge_service.dart';
-import '../../../models/dashboard/knowledge_article_model.dart';
-import '../../../widgets/dashboard/upload_drop_zone.dart';
-import '../../../widgets/adaptive/responsive_container.dart';
+
 import '../../../core/responsive/responsive.dart';
+import '../../../models/dashboard/knowledge_article_model.dart';
+import '../../../services/mock/mock_knowledge_service.dart';
+import '../../../widgets/dashboard/upload_drop_zone.dart';
 
 class KnowledgeBaseScreen extends StatefulWidget {
   const KnowledgeBaseScreen({super.key});
@@ -68,12 +68,12 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
         children: [
           // Upload Section
           _buildUploadSection(),
-          
+
           const SizedBox(height: 32),
 
           // Social Media Integration
           _buildSocialMediaSection(),
-          
+
           const SizedBox(height: 32),
 
           // Knowledge Articles Section
@@ -89,10 +89,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -112,11 +109,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                   color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.cloud_upload_outlined,
-                  color: Color(0xFF8B5CF6),
-                  size: 20,
-                ),
+                child: const Icon(Icons.cloud_upload_outlined, color: Color(0xFF8B5CF6), size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -132,10 +125,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
           const SizedBox(height: 16),
           const Text(
             'Upload PDF, EPUB, or Markdown files to build your knowledge base.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
           ),
           const SizedBox(height: 16),
           UploadDropZone(
@@ -155,10 +145,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -178,11 +165,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                   color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.share_outlined,
-                  color: Color(0xFFF59E0B),
-                  size: 20,
-                ),
+                child: const Icon(Icons.share_outlined, color: Color(0xFFF59E0B), size: 20),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -198,13 +181,10 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
           const SizedBox(height: 16),
           const Text(
             'Connect your YouTube channel or Instagram page to automatically import content.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
           ),
           const SizedBox(height: 24),
-          
+
           // YouTube Integration
           _buildSocialMediaInput(
             controller: _youtubeController,
@@ -215,9 +195,9 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
             buttonColor: Colors.red,
             onImport: _handleYouTubeImport,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Instagram Integration
           _buildSocialMediaInput(
             controller: _instagramController,
@@ -239,10 +219,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -283,11 +260,8 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          
-          if (_filteredArticles.isEmpty)
-            _buildEmptyArticles()
-          else
-            _buildArticlesList(),
+
+          if (_filteredArticles.isEmpty) _buildEmptyArticles() else _buildArticlesList(),
         ],
       ),
     );
@@ -298,27 +272,16 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       padding: const EdgeInsets.all(32),
       child: const Column(
         children: [
-          Icon(
-            Icons.article_outlined,
-            size: 48,
-            color: Color(0xFF6B7280),
-          ),
+          Icon(Icons.article_outlined, size: 48, color: Color(0xFF6B7280)),
           SizedBox(height: 16),
           Text(
             'No articles yet',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1F2937),
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
           ),
           SizedBox(height: 8),
           Text(
             'Upload files or connect social media to start building your knowledge base.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -339,10 +302,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         children: [
@@ -359,9 +319,9 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
               size: 20,
             ),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Article Info
           Expanded(
             child: Column(
@@ -387,28 +347,16 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Text(
-                      '•',
-                      style: TextStyle(color: Colors.grey[400]),
-                    ),
+                    Text('•', style: TextStyle(color: Colors.grey[400])),
                     Text(
                       _formatDate(article.createdAt),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280),
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                     ),
                     if (article.size != null) ...[
-                      Text(
-                        '•',
-                        style: TextStyle(color: Colors.grey[400]),
-                      ),
+                      Text('•', style: TextStyle(color: Colors.grey[400])),
                       Text(
                         article.formattedSize,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6B7280),
-                        ),
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                       ),
                     ],
                   ],
@@ -416,7 +364,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
               ],
             ),
           ),
-          
+
           // Status Badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -448,7 +396,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
               ],
             ),
           ),
-          
+
           // Delete Button
           const SizedBox(width: 8),
           IconButton(
@@ -518,7 +466,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {
@@ -538,10 +486,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to upload $file: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Failed to upload $file: $e'), backgroundColor: Colors.red),
           );
         }
       }
@@ -558,7 +503,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
         _articles.insert(0, article);
       });
       _youtubeController.clear();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -589,7 +534,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
         _articles.insert(0, article);
       });
       _instagramController.clear();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -630,9 +575,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
               labelText: label,
               hintText: hint,
               prefixIcon: Icon(icon, color: iconColor),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.5),
             ),
@@ -646,9 +589,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                 backgroundColor: buttonColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('Import'),
             ),
@@ -666,9 +607,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
               labelText: label,
               hintText: hint,
               prefixIcon: Icon(icon, color: iconColor),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.5),
             ),
@@ -681,9 +620,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
             backgroundColor: buttonColor,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           child: const Text('Import'),
         ),
@@ -698,10 +635,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
         title: const Text('Delete Article'),
         content: Text('Are you sure you want to delete "${article.title}"?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               Navigator.of(context).pop();
@@ -710,7 +644,7 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
                 setState(() {
                   _articles.removeWhere((a) => a.id == article.id);
                 });
-                
+
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
